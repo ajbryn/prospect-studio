@@ -1,0 +1,8 @@
+registration_id,serial,model,customer_name,address,city,state,zip,purchase_date,dealer_id,promo_code,fixture_expectation
+W-1001,SL26-2026-00481,Scissor Lift 26,Bayou Fulfillment Co.,24500 Brazos Way,Katy,TX,77494,2026-11-20,gulf,LIFT-K7Q3MX,exact (promo code matches L0001)
+W-1002,BL45-2026-00112,Boom Lift 45,Gulf Coast Sign and Lighting,9112 Business Center Dr,Pasadena,TX,77506,2027-01-10,bay,,strong (name_norm + zip)
+W-1003,SL19-2027-00035,Scissor Lift 19,Ship Channel Logistics,22274 Commerce St,La Porte,TX,77571,2027-03-02,bay,,strong (legal suffix removed)
+W-1004,SL26-2026-00533,Scissor Lift 26,Cypress Creek Electric,3170 Business Center Dr,Cypress,TX,77433,2026-12-05,gulf,,fuzzy -> needs_review
+W-1005,SL19-2026-00410,Scissor Lift 19,Magnolia Distribution,1800 Commerce St,Conroe,TX,77301,2026-08-01,pine,,ignored (before mail date 2026-10-15)
+W-1006,BL60-2026-00201,Boom Lift 60,Westpark Metal Fab,700 Other Rd,Houston,TX,77099,2027-02-14,gulf,,no match (same name, different ZIP)
+W-1007,SL26-2026-00600,Scissor Lift 26,Lakeside Marina Services,55 Harbor Dr,Kemah,TX,77565,2026-11-30,bay,,no match (not a lead)

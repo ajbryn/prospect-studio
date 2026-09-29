@@ -1,0 +1,8 @@
+company_name,domain,address,city,state,zip,reason
+Gulf Lift Equipment,gulflift.example,24100 Katy Fwy,Katy,TX,77494,dealer
+Bayport Aerial Supply,bayportaerial.example,4400 Spencer Hwy,Pasadena,TX,77504,dealer
+Pineland Equipment,pinelandequip.example,1500 N Frazier St,Conroe,TX,77301,dealer
+Coastal Crane & Rigging LLC,coastalcrane.example,9800 Market St,Houston,TX,77029,customer
+Harbor Point Logistics Inc,harborpointlogistics.example,1200 Port Rd,La Porte,TX,77571,customer
+Northfield Storage Co,,700 Aldine Bender Rd,Houston,TX,77060,dnc
+Apex Aerial Rentals,apexaerialrentals.example,5100 W Sam Houston Pkwy N,Houston,TX,77041,competitor

@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "name": "Bold hero",
+  "tone": "bold",
+  "format": { "size": "6x9", "bleedIn": 0.125 },
+  "front": {
+    "layout": "hero-bold-left",
+    "theme": { "palette": "brand-dark", "overlayStrength": 0.85 },
+    "slots": {
+      "headline": "Reaching new heights in {{ site.city }}, {{ company.shortName }}?",
+      "tagline": "Scissor and boom lifts for high-bay work, delivered this week."
+    }
+  },
+  "back": {
+    "layout": "letter-address",
+    "slots": {
+      "greeting": "Hello from {{ dealer.name }},",
+      "personal": "{{ lead.personalLine | default: 'We help teams like yours work safely and faster at height.' }}",
+      "benefits": ["Same-week delivery and operator training", "Local service from {{ branch.city }}"],
+      "offer": "Mention code {{ tracking.offerCode }} for {{ campaign.incentive | default: 'free delivery and first-year service' }}.",
+      "dealerCard": "Your local dealer: {{ dealer.name }}, {{ branch.city }}, TX · {{ branch.trackingPhone }}",
+      "attn": "Attn: {{ contact.name | default: 'Facilities Manager' }}"
+    }
+  },
+  "scene": {
+    "source": "illustration",
+    "buildingType": "warehouse",
+    "timeOfDay": "day",
+    "signText": "{{ company.name }}",
+    "productId": "scissor-lift-26",
+    "productPosition": "right",
+    "productScale": 1.0
+  }
+}

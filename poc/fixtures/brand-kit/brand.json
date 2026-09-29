@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "name": "Your Brand Lifts",
+  "shortName": "Your Brand",
+  "website": "https://yourbrand.example",
+  "colors": { "primary": "#1c3550", "accent": "#e8a317", "accentInk": "#1d1500", "ink": "#16202a", "paper": "#fbfbf8", "dusk": "#5a4a78" },
+  "fonts": {
+    "display": { "family": "Barlow Condensed", "files": ["fonts/BarlowCondensed-Bold.ttf", "fonts/BarlowCondensed-SemiBold.ttf"], "fallback": "'Arial Narrow', Arial, sans-serif" },
+    "body": { "family": "Barlow", "files": ["fonts/Barlow-Regular.ttf", "fonts/Barlow-Medium.ttf", "fonts/Barlow-SemiBold.ttf"], "fallback": "'Segoe UI', Arial, sans-serif" },
+    "mono": { "family": "IBM Plex Mono", "files": ["fonts/IBMPlexMono-Medium.ttf"], "fallback": "Consolas, monospace" }
+  },
+  "logo": "logo.svg",
+  "offerPrefix": "LIFT",
+  "defaults": {
+    "tagline": "Scissor and boom lifts for high-bay work, delivered this week.",
+    "benefits": ["Same-week delivery and operator training", "Local service from your dealer"],
+    "incentive": "free delivery and first-year service",
+    "cta": "Scan for a demo",
+    "legalFooter": "Offer valid through participating dealers until 2027-03-31. Placeholder legal text.",
+    "returnAddress": "Your Brand Lifts · 100 Example Pkwy · Houston, TX 77002"
+  },
+  "products": [
+    { "id": "scissor-lift-26", "name": "Scissor Lift 26", "image": "products/scissor-lift-26.svg", "specs": ["26 ft working height", "1,000 lb platform", "Non-marking tires"], "anchor": { "x": 0.5, "y": 0.97 } }
+  ]
+}

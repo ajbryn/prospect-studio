@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://prospect-studio.local/schemas/postcard-spec.schema.json",
+  "title": "PostcardSpec",
+  "description": "Design spec for a postcard. Slot values may contain Liquid merge fields (rendered with Fluid) such as {{ site.city }} or {{ contact.firstName | default: 'there' }}. Layout-specific slot ids and character limits are enforced in code from each layout.json.",
+  "type": "object",
+  "required": ["version", "format", "front", "back", "scene"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": 1 },
+    "name": { "type": "string", "maxLength": 80 },
+    "tone": { "enum": ["bold", "friendly", "technical", "premium"] },
+    "format": {
+      "type": "object",
+      "required": ["size"],
+      "additionalProperties": false,
+      "properties": {
+        "size": { "enum": ["6x9"], "description": "POC supports 6x9 only; 4x6 and 6x11 later." },
+        "bleedIn": { "const": 0.125 }
+      }
+    },
+    "front": { "$ref": "#/$defs/side" },
+    "back": { "$ref": "#/$defs/side" },
+    "scene": {
+      "type": "object",
+      "required": ["source"],
+      "additionalProperties": false,
+      "properties": {
+        "source": { "enum": ["illustration", "asset"], "description": "illustration = SceneBuilder SVG; asset = licensed image from the brand kit or campaign folder." },
+        "buildingType": { "enum": ["warehouse", "plant", "shop", "office", "campus"], "default": "warehouse" },
+        "timeOfDay": { "enum": ["day", "dusk"], "default": "day" },
+        "signText": { "type": "string", "maxLength": 40, "default": "{{ company.shortName }}" },
+        "productId": { "type": "string", "minLength": 1 },
+        "productPosition": { "enum": ["left", "center", "right"], "default": "right" },
+        "productScale": { "type": "number", "minimum": 0.6, "maximum": 1.4, "default": 1.0 },
+        "assetPath": { "type": "string", "description": "Required when source = asset. Must have an .asset.json sidecar." }
+      },
+      "if": { "properties": { "source": { "const": "asset" } } },
+      "then": { "required": ["source", "assetPath"] },
+      "else": { "required": ["source", "productId"] }
+    }
+  },
+  "$defs": {
+    "side": {
+      "type": "object",
+      "required": ["layout", "slots"],
+      "additionalProperties": false,
+      "properties": {
+        "layout": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "theme": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "palette": { "enum": ["brand-dark", "brand-light", "dusk"] },
+            "overlayStrength": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
+        "slots": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": { "$ref": "#/$defs/slotValue" }
+        }
+      }
+    },
+    "slotValue": {
+      "oneOf": [
+        { "type": "string", "maxLength": 600 },
+        { "type": "array", "items": { "type": "string", "maxLength": 120 }, "maxItems": 5 },
+        {
+          "type": "object",
+          "required": ["value"],
+          "additionalProperties": false,
+          "properties": {
+            "value": { "oneOf": [ { "type": "string", "maxLength": 600 }, { "type": "array", "items": { "type": "string" }, "maxItems": 5 } ] },
+            "style": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+            "hidden": { "type": "boolean" }
+          }
+        }
+      ]
+    }
+  }
+}

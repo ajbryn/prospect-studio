@@ -1,0 +1,37 @@
+[
+  {
+    "case": "signal without url",
+    "expectedError": "signals/0: required property 'url'",
+    "research": { "status": "researched", "summary": "Sign contractor in Pasadena.", "rationale": "Works at height daily.",
+      "signals": [ { "type": "hiring", "text": "Hiring sign installers with boom lift experience.", "date": "2026-08" } ] }
+  },
+  {
+    "case": "bad date format",
+    "expectedError": "signals/0/date: pattern",
+    "research": { "status": "researched", "summary": "Sign contractor in Pasadena.", "rationale": "Works at height daily.",
+      "signals": [ { "type": "hiring", "text": "Hiring sign installers with boom lift experience.", "url": "https://jobs.example.com/x", "date": "August 2026" } ] }
+  },
+  {
+    "case": "personal line too long",
+    "expectedError": "personalLine: maxLength 180",
+    "research": { "status": "researched", "summary": "Warehouse operator in Conroe.", "rationale": "Mezzanine permit suggests fit-out.",
+      "personalLine": "We noticed that your company recently filed a permit for a mezzanine addition at your Conroe warehouse and we would love to talk to you about how our scissor lifts can make the build-out faster and safer for your crew this fall." }
+  },
+  {
+    "case": "adjustment out of range",
+    "expectedError": "llmAdjustment: maximum 15",
+    "research": { "status": "researched", "summary": "Warehouse operator in Conroe.", "rationale": "Mezzanine permit suggests fit-out.", "llmAdjustment": 20 }
+  },
+  {
+    "case": "no_signal with signals",
+    "expectedError": "signals: maxItems 0 when status is no_signal",
+    "research": { "status": "no_signal", "summary": "Small glazing shop in Spring.", "rationale": "Nothing found beyond the website.",
+      "signals": [ { "type": "news", "text": "Opened in 2019.", "url": "https://news.example.com/a", "date": "2019-05" } ] }
+  },
+  {
+    "case": "non-http url",
+    "expectedError": "signals/0/url: pattern",
+    "research": { "status": "researched", "summary": "HVAC contractor in Sugar Land.", "rationale": "Commercial service work.",
+      "signals": [ { "type": "hiring", "text": "Hiring commercial HVAC technicians.", "url": "ftp://jobs.example.com/x", "date": "2026-09" } ] }
+  }
+]

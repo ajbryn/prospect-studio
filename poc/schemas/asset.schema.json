@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://prospect-studio.local/schemas/asset.schema.json",
+  "title": "AssetSidecar",
+  "description": "License metadata stored next to every image as '<file>.asset.json'. The renderer refuses print output for assets whose allowedUses lacks 'print'.",
+  "type": "object",
+  "required": [
+    "source",
+    "license",
+    "allowedUses"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "source": {
+      "enum": [
+        "company-owned",
+        "dealer-photo",
+        "mapillary",
+        "licensed-stock",
+        "licensed-aerial",
+        "generated-illustration",
+        "ai-generated",
+        "placeholder"
+      ]
+    },
+    "license": {
+      "type": "string",
+      "minLength": 2,
+      "description": "E.g. 'owned', 'CC BY-SA 4.0', 'Contract #123'."
+    },
+    "attribution": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "Text the renderer must print near the image, if any."
+    },
+    "allowedUses": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "screen",
+          "email",
+          "print"
+        ]
+      }
+    },
+    "notes": {
+      "type": "string",
+      "maxLength": 500
+    }
+  }
+}

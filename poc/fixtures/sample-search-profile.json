@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "name": "Houston Scissor & Boom Lifts Q4",
+  "product": "Scissor & boom lifts (aerial work platforms)",
+  "brief": "We sell scissor and boom lifts. Find companies in the Houston area that do a lot of overhead work: big warehouses, manufacturers with high-bay facilities, electrical, HVAC and sign contractors. Prefer 20+ employees. Growing companies are best. Skip rental companies and our existing customers.",
+  "segments": [
+    {
+      "name": "Warehousing & 3PL",
+      "rationale": "High-bay racking, lighting and maintenance work at height.",
+      "naics": ["4931", "4841", "4885"],
+      "overtureCategories": ["warehouse", "logistics_service", "freight_and_cargo_service", "cold_storage"],
+      "keywords": ["distribution", "fulfillment", "warehouse", "3pl", "logistics", "racking"]
+    },
+    {
+      "name": "High-bay manufacturing",
+      "rationale": "Plant maintenance, crane and lighting access.",
+      "naics": ["332", "333", "336"],
+      "overtureCategories": ["manufacturing", "metal_fabricator"],
+      "keywords": ["fabrication", "manufacturing", "machining", "steel"]
+    },
+    {
+      "name": "Electrical, HVAC & sign contractors",
+      "rationale": "Daily installation work at height on commercial jobs.",
+      "naics": ["238210", "238220", "238990"],
+      "overtureCategories": ["electrician", "hvac_services", "sign_making", "glass_and_mirror_shop"],
+      "keywords": ["electrical", "hvac", "mechanical", "sign", "glazing"]
+    },
+    {
+      "name": "Facilities & property management",
+      "rationale": "Atriums, lobbies and campus lighting maintenance.",
+      "naics": ["561210", "531312"],
+      "overtureCategories": ["property_management"],
+      "keywords": ["facilities", "property services"],
+      "minEmployees": 50
+    }
+  ],
+  "size": { "employeesMin": 20 },
+  "facilityKeywords": ["warehouse", "distribution center", "fulfillment", "high-bay", "dock", "racking", "mezzanine", "manufacturing", "fabrication", "plant", "square feet", "sq ft", "crane", "installation", "overhead", "ceiling", "aerial", "lift"],
+  "signals": ["permit", "hiring", "expansion", "news", "contract"],
+  "exclusions": {
+    "naics": ["532412"],
+    "overtureCategories": ["equipment_rental", "restaurant"],
+    "keywords": ["equipment rental"],
+    "suppressionReasons": ["customer", "dnc", "dealer", "competitor"]
+  },
+  "geography": { "query": "Houston metro" },
+  "minConfidence": 0.6,
+  "research": { "topN": 25, "maxSearchesPerLead": 3 },
+  "scoringWeights": { "segmentFit": 0.25, "sizeFit": 0.15, "facilityFit": 0.20, "signals": 0.25, "proximity": 0.05, "confidence": 0.10 }
+}

@@ -1,0 +1,17 @@
+{
+  "status": "researched",
+  "summary": "Third-party logistics provider running a tilt-wall distribution center in Katy with 14 dock doors; serves retail and e-commerce clients.",
+  "segment": "Warehousing & 3PL",
+  "facilityFit": { "level": "high", "evidence": "Website describes 32-ft clear height racking and a 14-door dock.", "url": "https://www.bayoufulfillment.example/facility" },
+  "employeeEstimate": { "value": 140, "source": "https://www.bayoufulfillment.example/about", "note": "About page: 'a team of 140'" },
+  "signals": [
+    { "type": "permit", "text": "Commercial addition permit, 180,000 sq ft, filed for the Katy site.", "url": "https://permits.example.gov/record/2026-0718-4431", "date": "2026-07" },
+    { "type": "hiring", "text": "Job post: warehouse maintenance technician, aerial lift certification preferred.", "url": "https://jobs.example.com/bayou-fulfillment/maint-tech", "date": "2026-09-12" }
+  ],
+  "suggestedAngle": "Congratulate them on the expansion; offer short-term rental-to-own on scissor lifts for the racking fit-out.",
+  "personalLine": "Congrats on the 180,000 sq ft addition in Katy. Fitting out high-bay racking goes faster with the right lift on site.",
+  "contactRoles": ["Facilities Manager", "Operations Director"],
+  "llmAdjustment": 5,
+  "rationale": "Expanding high-bay warehouse with an active permit and a job post naming aerial lifts; strong near-term need.",
+  "sources": ["https://www.bayoufulfillment.example/about", "https://permits.example.gov/record/2026-0718-4431"]
+}

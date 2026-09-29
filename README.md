@@ -33,6 +33,7 @@ A marketer types "Find warehouses, manufacturers and HVAC/electrical contractors
 | [poc/technical-design.md](poc/technical-design.md) | Solution structure, data model, algorithms, rendering, skills |
 | [poc/mcp-tools.md](poc/mcp-tools.md) | Contract for every MCP tool |
 | [poc/implementation-plan.md](poc/implementation-plan.md) | Chunks C0–C13 + stretch, each with tests and a manual check |
+| [poc/agent-workflow.md](poc/agent-workflow.md) · [poc/claude-config/](poc/claude-config/README.md) | Subagent roles, the per-chunk pipeline, parallel waves; agent files to install into `.claude/` |
 | [poc/schemas/](poc/schemas/) · [poc/fixtures/](poc/fixtures/README.md) | JSON Schemas and fictional test data |
 
 ## Critical constraints
@@ -51,6 +52,7 @@ PersonalizedMarketing/        ← this spec repo
 ├─ mockups/                   pitch mockups, screenshots
 ├─ poc/                       POC handoff pack (requirements, design, plan, schemas, fixtures)
 ├─ CLAUDE.md                  instructions for Claude Code
+├─ .claude/                   subagents (agents/*.md) and shared settings
 ├─ adr/                       architecture decision records (as decisions get made)
 ├─ src/                       POC code (created in chunk C0)
 └─ plugin/prospect-studio/    Claude plugin with skills (created in chunk C9)

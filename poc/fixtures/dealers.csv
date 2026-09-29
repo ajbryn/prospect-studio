@@ -1,0 +1,4 @@
+dealer_id,dealer_name,website,alert_email,branch_id,branch_name,address,city,state,zip,lat,lon,phone,tracking_phone
+gulf,Gulf Lift Equipment,https://gulflift.example,leads@gulflift.example,gulf-west,West Houston branch,24100 Katy Fwy,Katy,TX,77494,29.7858,-95.8245,(281) 555-0142,(281) 555-0199
+bay,Bayport Aerial Supply,https://bayportaerial.example,sales@bayportaerial.example,bay-pas,Pasadena branch,4400 Spencer Hwy,Pasadena,TX,77504,29.6911,-95.2091,(713) 555-0188,(713) 555-0177
+pine,Pineland Equipment,https://pinelandequip.example,info@pinelandequip.example,pine-north,North Houston branch,1500 N Frazier St,Conroe,TX,77301,30.3119,-95.4561,(936) 555-0117,(936) 555-0166

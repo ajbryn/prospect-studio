@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://prospect-studio.local/schemas/search-profile.schema.json",
+  "title": "SearchProfile",
+  "description": "Structured ideal-customer profile produced by Claude from the user's brief and confirmed by the user.",
+  "type": "object",
+  "required": ["version", "name", "product", "segments", "geography"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": 1 },
+    "name": { "type": "string", "minLength": 3, "maxLength": 120 },
+    "product": { "type": "string", "minLength": 2, "maxLength": 120, "description": "What we're selling, e.g. 'Scissor & boom lifts'." },
+    "brief": { "type": "string", "maxLength": 4000, "description": "The user's original request, verbatim." },
+    "segments": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 2, "maxLength": 80 },
+          "rationale": { "type": "string", "maxLength": 400, "description": "Why this segment likely needs the product." },
+          "naics": { "type": "array", "items": { "type": "string", "pattern": "^[0-9]{2,6}$" }, "uniqueItems": true },
+          "overtureCategories": { "type": "array", "items": { "type": "string", "minLength": 2 }, "uniqueItems": true },
+          "keywords": { "type": "array", "items": { "type": "string", "minLength": 2 }, "uniqueItems": true },
+          "minEmployees": { "type": "integer", "minimum": 0, "description": "Segment-specific override of size.employeesMin." }
+        },
+        "anyOf": [
+          { "required": ["overtureCategories"], "properties": { "overtureCategories": { "minItems": 1 } } },
+          { "required": ["keywords"], "properties": { "keywords": { "minItems": 1 } } }
+        ]
+      }
+    },
+    "size": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "employeesMin": { "type": "integer", "minimum": 0 },
+        "employeesMax": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "facilityKeywords": { "type": "array", "items": { "type": "string", "minLength": 2 }, "uniqueItems": true },
+    "signals": {
+      "type": "array",
+      "items": { "enum": ["permit", "hiring", "expansion", "news", "funding", "contract"] },
+      "uniqueItems": true
+    },
+    "exclusions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "naics": { "type": "array", "items": { "type": "string", "pattern": "^[0-9]{2,6}$" } },
+        "overtureCategories": { "type": "array", "items": { "type": "string" } },
+        "keywords": { "type": "array", "items": { "type": "string" } },
+        "suppressionReasons": { "type": "array", "items": { "enum": ["customer", "dnc", "dealer", "competitor", "other"] } }
+      }
+    },
+    "geography": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "query": { "type": "string", "minLength": 2, "description": "Free text, e.g. 'Houston metro' or 'dealer:gulf'." },
+        "scope": { "$ref": "#/$defs/geoScope" }
+      },
+      "anyOf": [ { "required": ["query"] }, { "required": ["scope"] } ]
+    },
+    "minConfidence": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.6 },
+    "research": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "topN": { "type": "integer", "minimum": 1, "maximum": 200, "default": 25 },
+        "maxSearchesPerLead": { "type": "integer", "minimum": 1, "maximum": 6, "default": 3 }
+      }
+    },
+    "scoringWeights": {
+      "type": "object",
+      "description": "Optional override; must sum to 1.0 (checked in code).",
+      "additionalProperties": false,
+      "required": ["segmentFit", "sizeFit", "facilityFit", "signals", "proximity", "confidence"],
+      "properties": {
+        "segmentFit": { "type": "number", "minimum": 0, "maximum": 1 },
+        "sizeFit": { "type": "number", "minimum": 0, "maximum": 1 },
+        "facilityFit": { "type": "number", "minimum": 0, "maximum": 1 },
+        "signals": { "type": "number", "minimum": 0, "maximum": 1 },
+        "proximity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    }
+  },
+  "$defs": {
+    "geoScope": {
+      "type": "object",
+      "required": ["type", "label"],
+      "properties": {
+        "type": { "enum": ["state", "counties", "cbsa", "zips", "radius", "dealer"] },
+        "label": { "type": "string" },
+        "cbsa": { "type": "string", "pattern": "^[0-9]{5}$" },
+        "states": { "type": "array", "items": { "type": "string", "pattern": "^[A-Z]{2}$" } },
+        "countyFips": { "type": "array", "items": { "type": "string", "pattern": "^[0-9]{5}$" } },
+        "zips": { "type": "array", "items": { "type": "string", "pattern": "^[0-9]{5}$" } },
+        "radius": {
+          "type": ["object", "null"],
+          "properties": { "lat": { "type": "number" }, "lon": { "type": "number" }, "miles": { "type": "number", "exclusiveMinimum": 0 } }
+        },
+        "bbox": { "type": "array", "items": { "type": "number" }, "minItems": 4, "maxItems": 4 }
+      }
+    }
+  }
+}

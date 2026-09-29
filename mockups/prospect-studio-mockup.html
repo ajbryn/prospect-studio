@@ -1,0 +1,643 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prospect Studio Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: app shell — top bar, 4-step workflow rail, one working surface per step (two-pane on desktop, stacked on phone) */
+:root{
+  --bg:#eef1f3; --surface:#ffffff; --surface-2:#f5f7f8; --line:#d5dbe0;
+  --fg:#16202a; --muted:#5a6772;
+  --accent:#e8a317; --accent-ink:#1d1500; --accent-text:#8a5a00;
+  --blue:#2d5b86; --blue-soft:#e3ecf5;
+  --good:#2f7d4f; --good-soft:#e2f2e8; --warn:#9a6200; --warn-soft:#fbefd6; --bad:#b3372f; --bad-soft:#f8e1de;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  --r:6px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10151a; --surface:#171f27; --surface-2:#1d2730; --line:#2b3742;
+  --fg:#e6ebef; --muted:#9aa6b1;
+  --accent:#f0b03a; --accent-ink:#1d1500; --accent-text:#f3c063;
+  --blue:#86b5df; --blue-soft:#1d2e40;
+  --good:#6cc28f; --good-soft:#193426; --warn:#e7b451; --warn-soft:#3a2d12; --bad:#ef8278; --bad-soft:#3e1f1c;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#10151a; --surface:#171f27; --surface-2:#1d2730; --line:#2b3742;
+  --fg:#e6ebef; --muted:#9aa6b1;
+  --accent:#f0b03a; --accent-ink:#1d1500; --accent-text:#f3c063;
+  --blue:#86b5df; --blue-soft:#1d2e40;
+  --good:#6cc28f; --good-soft:#193426; --warn:#e7b451; --warn-soft:#3a2d12; --bad:#ef8278; --bad-soft:#3e1f1c;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 var(--body)}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.wrap{max-width:1280px;margin:0 auto;padding-inline:16px;padding-block:0 48px}
+
+.topbar{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:center;justify-content:space-between;padding-block:16px}
+.brand{display:flex;align-items:baseline;gap:10px}
+.brand b{font:700 26px/1 var(--display);letter-spacing:.01em}
+.brand span{font:500 12px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.campaign{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:14px;color:var(--muted)}
+.campaign strong{color:var(--fg);font-weight:600}
+.mock-note{font:500 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;background:var(--warn-soft);color:var(--warn);padding:3px 8px;border-radius:3px}
+
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:20px}
+.step{background:var(--surface);border:0;padding:10px 14px;text-align:left;display:flex;gap:10px;align-items:center;min-width:0}
+.step .n{font:600 13px var(--mono);width:26px;height:26px;border-radius:50%;display:grid;place-items:center;border:1.5px solid var(--line);color:var(--muted);flex:none}
+.step .t{font:600 15px var(--body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.step .s{font-size:12px;color:var(--muted);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.step[aria-selected="true"]{background:var(--surface-2);box-shadow:inset 0 -3px 0 var(--accent)}
+.step[aria-selected="true"] .n{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.step.done .n{border-color:var(--good);color:var(--good)}
+@media (max-width:720px){.steps{grid-template-columns:repeat(2,minmax(0,1fr))}.step .s{display:none}}
+
+h1,h2,h3{text-wrap:balance;margin:0}
+h2{font:700 28px/1.1 var(--display);letter-spacing:.005em}
+h3{font:600 13px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.lede{color:var(--muted);max-width:68ch;margin:6px 0 18px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;min-width:0}
+.cols{display:grid;gap:16px;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.cols.wide-left{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}
+@media (max-width:900px){.cols,.cols.wide-left{grid-template-columns:minmax(0,1fr)}}
+.stack{display:flex;flex-direction:column;gap:14px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:4px;padding:8px 14px;font-weight:600}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.05)}
+.btn.primary:disabled{opacity:.45;cursor:not-allowed}
+.btn.sm{padding:4px 10px;font-size:13px}
+
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface-2);border-radius:999px;padding:3px 10px;font-size:13px}
+.chip code{font:500 11px var(--mono);color:var(--muted)}
+.chip.x::after{content:"×";color:var(--muted);margin-left:2px}
+.pill{font:600 11px var(--mono);letter-spacing:.04em;text-transform:uppercase;padding:2px 7px;border-radius:3px;white-space:nowrap}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.info{background:var(--blue-soft);color:var(--blue)}
+
+/* Step 1 */
+.chat{display:flex;flex-direction:column;gap:12px}
+.msg{padding:12px 14px;border-radius:var(--r);max-width:62ch}
+.msg.user{background:var(--blue-soft);align-self:flex-end}
+.msg.ai{background:var(--surface-2);border:1px solid var(--line)}
+.msg .who{font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted);display:block;margin-bottom:4px}
+.composer{display:flex;gap:8px;margin-top:4px}
+.composer input{flex:1;min-width:0;border:1px solid var(--line);background:var(--surface);border-radius:4px;padding:8px 10px}
+.field{display:grid;grid-template-columns:120px minmax(0,1fr);gap:8px 12px;padding-block:10px;border-top:1px solid var(--line)}
+.field:first-of-type{border-top:0}
+.field dt{font:500 12px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding-top:3px}
+.field dd{margin:0;display:flex;flex-wrap:wrap;gap:6px}
+@media (max-width:480px){.field{grid-template-columns:minmax(0,1fr)}}
+.preview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.preview div{background:var(--surface);padding:12px}
+.preview b{display:block;font:700 26px/1 var(--display);font-variant-numeric:tabular-nums}
+.preview span{font-size:12px;color:var(--muted)}
+@media (max-width:560px){.preview{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.scope{display:flex;flex-wrap:wrap;gap:6px}
+.scope label{border:1px solid var(--line);border-radius:4px;padding:5px 10px;font-size:13px;cursor:pointer}
+.scope input{accent-color:var(--accent);margin-right:4px}
+.note{font-size:13px;color:var(--muted)}
+
+/* Step 2 */
+.summary{display:flex;flex-wrap:wrap;gap:18px;align-items:baseline;margin-bottom:12px}
+.summary .k{font:700 24px/1 var(--display);font-variant-numeric:tabular-nums}
+.summary .l{font-size:12px;color:var(--muted);margin-left:4px}
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.filters button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 12px;font-size:13px}
+.filters button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.tablebox{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r)}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:14px}
+th{font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);text-align:left;padding:8px 10px;background:var(--surface-2);border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:var(--surface-2)}
+tbody tr.sel{background:var(--blue-soft)}
+.score{display:inline-flex;align-items:center;gap:6px;font:600 14px var(--mono);font-variant-numeric:tabular-nums}
+.tier{font:700 11px var(--mono);width:20px;height:20px;display:grid;place-items:center;border-radius:3px}
+.tier.A{background:var(--good-soft);color:var(--good)}
+.tier.B{background:var(--blue-soft);color:var(--blue)}
+.tier.C{background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+.sig{display:flex;flex-wrap:wrap;gap:4px}
+.sig span{font-size:12px;border:1px solid var(--line);border-radius:3px;padding:0 6px;white-space:nowrap}
+.co{font-weight:600}
+.sub{font-size:12px;color:var(--muted)}
+.detail h2{font-size:24px}
+.evidence{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+.evidence li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 10px;font-size:14px}
+.evidence .d{font:500 12px var(--mono);color:var(--muted);grid-column:2}
+.siteview{aspect-ratio:16/9;max-width:100%;border-radius:4px;border:1px dashed var(--line);background:repeating-linear-gradient(45deg,var(--surface-2) 0 10px,var(--surface) 10px 20px);display:grid;place-items:center;text-align:center;padding:12px;font-size:13px;color:var(--muted)}
+.ask{display:flex;gap:8px;margin-top:12px}
+.ask input{flex:1;min-width:0;border:1px solid var(--line);background:var(--surface);border-radius:4px;padding:8px 10px}
+
+/* Postcards */
+.pc{position:relative;aspect-ratio:3/2;max-width:100%;container-type:inline-size;overflow:hidden;border-radius:3px;box-shadow:0 1px 2px rgba(0,0,0,.18),0 6px 18px rgba(0,0,0,.12);background:#cfd8df}
+.pc svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.pc .ov{position:absolute;inset:0;display:flex;flex-direction:column;font-family:var(--display);color:#fff}
+.pc .hl{font-weight:700;line-height:.98;letter-spacing:.005em;text-wrap:balance;margin:0}
+.pc .tg{font-family:var(--body);font-weight:500;line-height:1.25;margin:0}
+.pc .logo{position:absolute;top:4cqw;right:4cqw;border:.25cqw solid currentColor;padding:.6cqw 1.4cqw;font:600 2cqw var(--mono);letter-spacing:.1em;color:#fff;background:rgba(0,0,0,.25)}
+.pc .cta{align-self:flex-start;background:#e8a317;color:#1d1500;font:600 2.4cqw var(--body);padding:1cqw 2.2cqw;border-radius:.6cqw;margin-top:2cqw}
+.pc .attr{position:absolute;left:1.5cqw;bottom:1cqw;font:400 1.5cqw var(--mono);color:#fff;text-shadow:0 0 3px #000;opacity:.9}
+.pc .stamp{position:absolute;inset:auto 0 42% 0;margin:auto;width:fit-content;transform:rotate(-8deg);border:.5cqw solid #d33;color:#d33;background:rgba(255,255,255,.88);font:700 4.4cqw var(--display);padding:.6cqw 2.4cqw;letter-spacing:.04em}
+.lay-bold{background:linear-gradient(90deg,rgba(9,17,27,.9) 0%,rgba(9,17,27,.6) 40%,rgba(9,17,27,0) 66%);padding:6cqw;justify-content:flex-end;max-width:100%}
+.lay-bold .hl{font-size:5.8cqw;max-width:54%}
+.lay-bold .tg{font-size:2.6cqw;max-width:46%;margin-top:1.6cqw;opacity:.92}
+.lay-band{justify-content:flex-end}
+.lay-band .band{background:#fff;color:#16202a;padding:3.2cqw 5cqw;display:flex;gap:3cqw;align-items:center;justify-content:space-between}
+.lay-band .hl{font-size:5.4cqw}
+.lay-band .tg{font-size:2.3cqw;color:#44515c;margin-top:.8cqw}
+.lay-band .cta{margin-top:0;flex:none}
+.lay-tech{flex-direction:row}
+.lay-tech .side{width:42%;background:#1c3550;padding:5cqw 4cqw;display:flex;flex-direction:column;justify-content:center}
+.lay-tech .hl{font-size:5cqw}
+.lay-tech ul{margin:2cqw 0 0;padding:0;list-style:none;font:500 2.2cqw/1.5 var(--mono);color:#cfe0ef}
+.lay-tech li::before{content:"▸ ";color:#e8a317}
+.lay-dusk{background:linear-gradient(0deg,rgba(18,10,30,.88) 0%,rgba(18,10,30,.35) 38%,rgba(18,10,30,0) 60%);justify-content:flex-end;align-items:center;text-align:center;padding:5cqw}
+.lay-dusk .hl{font-size:6.2cqw;max-width:80%}
+.lay-dusk .tg{font-size:2.5cqw;margin-top:1.2cqw;opacity:.9}
+.lay-dusk .cta{align-self:center}
+
+.variants{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start;align-content:flex-start}
+.variants>.variant{flex:1 1 calc(50% - 8px);min-width:0}
+@media (max-width:560px){.variants>.variant{flex-basis:100%}}
+.variant{cursor:pointer;border:2px solid transparent;border-radius:6px;padding:6px;background:none;text-align:left;display:flex;flex-direction:column;gap:8px;min-width:0}
+.variant[aria-pressed="true"]{border-color:var(--accent);background:var(--surface)}
+.variant .vl{display:flex;justify-content:space-between;gap:8px;font-size:13px;font-weight:600}
+.variant .vl span{font:500 11px var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+textarea{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:4px;padding:8px 10px;resize:vertical;min-height:70px}
+.src{display:flex;flex-direction:column;gap:6px}
+.src label{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid var(--line);border-radius:4px;padding:7px 10px;font-size:14px;cursor:pointer}
+.src label:has(input:checked){border-color:var(--accent);background:var(--surface-2)}
+.src input{accent-color:var(--accent);margin-right:6px}
+.alert{border-left:3px solid var(--bad);background:var(--bad-soft);padding:8px 12px;font-size:13px;border-radius:0 4px 4px 0}
+.history{font:400 12px/1.6 var(--mono);color:var(--muted);background:var(--surface-2);border:1px solid var(--line);border-radius:4px;padding:8px 10px;max-height:150px;overflow:auto;overflow-wrap:anywhere}
+.history div+div{border-top:1px dashed var(--line);padding-top:4px;margin-top:4px}
+.batch{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.bitem{display:flex;flex-direction:column;gap:6px;min-width:0}
+.bitem .meta{display:flex;justify-content:space-between;gap:6px;font-size:12px;align-items:center}
+.bitem .meta b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Step 4 */
+.channels{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.channel{border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:6px;cursor:pointer;background:var(--surface)}
+.channel:has(input:checked){border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.channel input{accent-color:var(--accent)}
+.channel b{font:700 19px var(--display)}
+.costs{width:100%;min-width:0;font-size:14px}
+.costs td{border-bottom:1px solid var(--line);padding:7px 4px}
+.costs td:last-child{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.costs tr.total td{font-weight:600;border-bottom:0}
+.funnel{display:flex;flex-direction:column;gap:8px}
+.bar{display:grid;grid-template-columns:110px minmax(0,1fr) 44px;gap:10px;align-items:center;font-size:13px}
+.bar .track{height:12px;background:var(--surface-2);border:1px solid var(--line);border-radius:2px;overflow:hidden}
+.bar .fill{height:100%;background:var(--blue)}
+.bar .v{font-family:var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+
+.check{display:flex;gap:10px;align-items:flex-start}
+.check>span{min-width:0}
+.folderbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:8px 12px;margin-bottom:14px;font-size:13px}
+.folderbar code{font:500 12px var(--mono);color:var(--fg);overflow-wrap:anywhere}
+.sync{display:inline-flex;align-items:center;gap:6px;color:var(--muted)}
+.sync::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--good)}
+.back{background:#fbfbf8;color:#1b232c;display:grid;grid-template-columns:58% 42%;font-family:var(--body)}
+.back .bmsg{padding:4cqw 3cqw 3cqw 4cqw;display:flex;flex-direction:column;gap:1.3cqw;border-right:.2cqw dashed #c9ccc6;min-width:0}
+.back .bmsg p{margin:0;font-size:2.15cqw;line-height:1.35}
+.back .bmsg .hi{font:700 3.2cqw var(--display)}
+.back .bmsg ul{margin:0;padding-left:2.6cqw;font-size:2cqw;line-height:1.4}
+.back .offer{display:flex;gap:2cqw;align-items:center;background:#fff4dc;border:.2cqw solid #e8a317;border-radius:.8cqw;padding:1.4cqw}
+.back .offer svg{position:static;width:11cqw;height:11cqw;flex:none}
+.back .offer b{font:700 2.8cqw var(--mono);letter-spacing:.04em;display:block}
+.back .offer span{font-size:1.8cqw;line-height:1.3;display:block}
+.back .dealer{font-size:1.9cqw;line-height:1.35;border-top:.2cqw solid #d8dad5;padding-top:1.2cqw}
+.back .dealer b{font-family:var(--display);font-size:2.6cqw}
+.back .addr{padding:4cqw;display:flex;flex-direction:column;justify-content:space-between}
+.back .stamp2{align-self:flex-end;border:.2cqw solid #1b232c;font:500 1.5cqw/1.3 var(--mono);padding:1cqw 1.4cqw;text-align:center;text-transform:uppercase}
+.back .to{font:500 2.3cqw/1.45 var(--mono);margin-bottom:3cqw}
+.back .imb{font:400 2cqw var(--mono);letter-spacing:.02em;color:#555;margin-bottom:.6cqw;overflow:hidden;white-space:nowrap}
+.sides{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:700px){.sides{grid-template-columns:minmax(0,1fr)}}
+.files{font:400 12px/1.7 var(--mono);background:var(--surface-2);border:1px solid var(--line);border-radius:4px;padding:8px 12px;overflow-x:auto;white-space:pre;margin:0}
+.ladder{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.ladder li{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:10px;align-items:center;font-size:14px;padding:6px 0;border-bottom:1px solid var(--line)}
+.ladder li:last-child{border-bottom:0}
+.ladder .lv{font:600 12px var(--mono);width:24px;height:24px;border-radius:3px;display:grid;place-items:center;background:var(--blue-soft);color:var(--blue)}
+.dtable{width:100%;min-width:560px;font-size:13px}
+.dtable td,.dtable th{padding:7px 8px}
+.dtable td.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.dtable th.n{text-align:right}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:4px;font-size:14px;max-width:calc(100% - 32px);box-shadow:0 6px 20px rgba(0,0,0,.25)}
+@media (prefers-reduced-motion:no-preference){.toast{animation:up .2s ease-out}@keyframes up{from{transform:translate(-50%,8px);opacity:0}}}
+</style>
+</head><body>
+
+<div class="wrap">
+  <header class="topbar">
+    <div class="brand"><b>Prospect Studio</b><span>concept mockup</span></div>
+    <div class="campaign">Local app · Campaign <strong>Houston · Scissor &amp; Boom Lifts · Q4</strong><span class="mock-note">Sample data · fictional companies</span></div>
+  </header>
+
+  <div class="folderbar"><span>Campaign folder <code>Documents\Prospect Studio\Campaigns\2026-10 Houston Scissor Lifts\</code></span><span class="row"><span class="sync">leads.xlsx synced · saved in Excel 2 min ago</span><button class="btn sm" id="openFolder">Open folder</button></span></div>
+
+  <nav class="steps" role="tablist" aria-label="Campaign steps">
+    <button class="step" role="tab" data-step="1" aria-selected="true"><span class="n">1</span><span><span class="t">Define search</span><span class="s">Describe the ideal customer</span></span></button>
+    <button class="step" role="tab" data-step="2" aria-selected="false"><span class="n">2</span><span><span class="t">Review leads</span><span class="s">Scored list with evidence</span></span></button>
+    <button class="step" role="tab" data-step="3" aria-selected="false"><span class="n">3</span><span><span class="t">Postcard studio</span><span class="s">Variants, edits, templates</span></span></button>
+    <button class="step" role="tab" data-step="4" aria-selected="false"><span class="n">4</span><span><span class="t">Send &amp; track</span><span class="s">Mail, email, responses</span></span></button>
+  </nav>
+
+  <!-- STEP 1 -->
+  <section id="s1" class="screen">
+    <h2>Who are we looking for?</h2>
+    <p class="lede">Describe the target in plain English. The assistant turns it into a search profile you can edit, then estimates market size and cost before anything runs.</p>
+    <div class="cols">
+      <div class="panel chat">
+        <div class="msg user"><span class="who">Marketing · Maria G.</span>We sell scissor and boom lifts. Find companies in the Houston area that do a lot of overhead work: big warehouses, manufacturers with high-bay facilities, electrical, HVAC and sign contractors. Prefer 20+ employees. Growing companies are best. Skip rental companies and our existing customers.</div>
+        <div class="msg ai"><span class="who">Assistant</span>I built a profile with four segments. I added <b>facility-management firms and campuses</b> because they maintain high ceilings and lighting year-round. Remove them if that's not a fit. Growth signals I'll look for: commercial permits in the last 12 months, job posts mentioning aerial or scissor lifts, and expansion news. Your CRM customer list will be excluded.</div>
+        <div class="msg user"><span class="who">Marketing · Maria G.</span>Keep facilities, but only if they have 50+ employees.</div>
+        <div class="msg ai"><span class="who">Assistant</span>Done. The facilities segment now requires 50+ employees. The estimate dropped to about 1,310 establishments.</div>
+        <div class="composer"><input id="brief" aria-label="Message the assistant" placeholder="Refine the search, e.g. “also include glass & glazing contractors”"><button class="btn" id="mic1" title="Voice input in the real app">🎤</button><button class="btn" id="send1">Send</button></div>
+      </div>
+
+      <div class="stack">
+        <div class="panel">
+          <div class="row" style="justify-content:space-between;margin-bottom:6px"><h3>Search profile</h3><span class="pill info">Editable</span></div>
+          <dl style="margin:0">
+            <div class="field"><dt>Product</dt><dd><span class="chip">Scissor lifts</span><span class="chip">Boom lifts</span></dd></div>
+            <div class="field"><dt>Segments</dt><dd>
+              <span class="chip x">Warehousing &amp; 3PL <code>493 · 4841</code></span>
+              <span class="chip x">High-bay manufacturing <code>332 · 333 · 336</code></span>
+              <span class="chip x">Electrical / HVAC / sign <code>238210 · 238220 · 238990</code></span>
+              <span class="chip x">Facilities &amp; campuses <code>561210 · 611310</code> 50+</span></dd></div>
+            <div class="field"><dt>Size</dt><dd><span class="chip">20+ employees</span></dd></div>
+            <div class="field"><dt>Signals</dt><dd><span class="chip x">Permit ≤ 12 mo</span><span class="chip x">Lift-related job posts</span><span class="chip x">Expansion news</span></dd></div>
+            <div class="field"><dt>Exclude</dt><dd><span class="chip x">Equipment rental <code>532412</code></span><span class="chip x">CRM customers (412)</span></dd></div>
+            <div class="field"><dt>Area</dt><dd class="scope" role="radiogroup" aria-label="Search area">
+              <label><input type="radio" name="scope" id="sc-dealer" value="dealer">Dealer: Gulf Lift Equipment</label>
+              <label><input type="radio" name="scope" id="sc-metro" value="metro" checked>Houston metro (CBSA 26420)</label>
+              <label><input type="radio" name="scope" id="sc-state" value="state">Texas</label>
+              <label><input type="radio" name="scope" id="sc-us" value="us">All US</label>
+            </dd></div>
+          </dl>
+        </div>
+        <div class="panel">
+          <h3 style="margin-bottom:10px">Preview before running</h3>
+          <div class="preview" id="preview"></div>
+          <p class="note" id="scopeNote" style="margin:10px 0 12px"></p>
+          <div class="row"><button class="btn primary" id="run">Run search</button><button class="btn">Save profile</button></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 2 -->
+  <section id="s2" class="screen" hidden>
+    <h2>Review leads</h2>
+    <p class="lede">Every score comes with a reason and sources, and every lead is routed to its local dealer. Review here or in <b>leads.xlsx</b>; changes saved in Excel flow back into the app.</p>
+    <div class="summary" id="summary"></div>
+    <div class="cols wide-left">
+      <div class="stack" style="gap:0">
+        <div class="filters" id="filters" role="group" aria-label="Filter leads"></div>
+        <div class="tablebox"><table>
+          <thead><tr><th>Score</th><th>Company</th><th>Segment</th><th>City</th><th>Dealer</th><th>Signals</th><th>Status</th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table></div>
+        <div class="ask"><input id="askList" aria-label="Ask about this list" placeholder="Ask about this list: “remove anything under 30 employees” or “find 10 more like Bayou Fulfillment”"><button class="btn">Ask</button></div>
+      </div>
+      <aside class="panel detail stack" id="detail" aria-live="polite"></aside>
+    </div>
+  </section>
+
+  <!-- STEP 3 -->
+  <section id="s3" class="screen" hidden>
+    <h2>Postcard studio</h2>
+    <p class="lede">Four starting designs, previewed for the top lead and co-branded with its dealer. Pick one, tell the assistant what to change (typed or spoken), then save it as a template and apply it to every approved lead.</p>
+    <div class="cols wide-left">
+      <div class="variants" id="variants"></div>
+      <div class="stack">
+        <div class="panel stack">
+          <h3>Refine selected design</h3>
+          <textarea id="instr" aria-label="Change request">Shorter headline, put the lift on the left, and give it warm sunset light.</textarea>
+          <div class="row"><button class="btn primary" id="apply">Apply change</button><button class="btn" id="mic3" title="Voice input in the real app">🎤 Speak</button><button class="btn" id="undo">Undo</button></div>
+          <div><h3 style="margin-bottom:6px">Edit history (JSON patches)</h3><div class="history" id="history"><div>No edits yet.</div></div></div>
+        </div>
+        <div class="panel stack">
+          <h3>Hero image source</h3>
+          <div class="src" id="src">
+            <label><span><input type="radio" name="src" id="src-ai" value="ai" checked>AI look-alike scene</span><span class="pill good">Print OK</span></label>
+            <label><span><input type="radio" name="src" id="src-rep" value="rep">Dealer / field photo</span><span class="pill good">Print OK</span></label>
+            <label><span><input type="radio" name="src" id="src-map" value="mapillary">Mapillary street photo</span><span class="pill warn">Credit required</span></label>
+            <label><span><input type="radio" name="src" id="src-sv" value="streetview">Google Street View</span><span class="pill bad">Screen only</span></label>
+          </div>
+          <div class="alert" id="svAlert" hidden>Google's terms don't allow Street View imagery in print or promotional material, and don't allow it to be modified. Use it in the lead panel to look at the site, then pick another source for the card.</div>
+        </div>
+        <div class="panel stack">
+          <h3>Template</h3>
+          <div class="row"><button class="btn" id="saveTpl">Save as template</button><button class="btn primary" id="applyAll">Apply to approved leads</button></div>
+          <p class="note" style="margin:0">Merge fields: <code>{{company.short}}</code> <code>{{site.city}}</code> <code>{{lead.personalLine}}</code></p>
+        </div>
+      </div>
+    </div>
+    <div class="stack" style="margin-top:22px">
+      <div class="row" style="justify-content:space-between"><h3>Selected design · front and back</h3><span class="note">The back carries the dealer, offer code and QR code that make each card traceable</span></div>
+      <div class="sides" id="sides"></div>
+    </div>
+    <div id="batchWrap" class="stack" style="margin-top:22px" hidden>
+      <div class="row" style="justify-content:space-between"><h3 id="batchTitle"></h3><span class="note">The QA pass checks for text overflow, image problems and odd copy</span></div>
+      <div class="batch" id="batch"></div>
+      <h3>Files written to the campaign folder</h3>
+      <pre class="files" id="files"></pre>
+    </div>
+  </section>
+
+  <!-- STEP 4 -->
+  <section id="s4" class="screen" hidden>
+    <h2>Send &amp; track</h2>
+    <p class="lede">Choose a channel, check the cost and approve the batch. Each dealer gets a lead packet, and responses are traced from scan to dealer follow-up to sale.</p>
+    <div class="cols">
+      <div class="stack">
+        <div class="channels">
+          <label class="channel"><span class="row"><input type="radio" name="ch" id="ch-mail" value="mail" checked><b>Print &amp; mail</b></span><span class="note">6×9 First Class postcard via print-and-mail API, with address verification and delivery tracking.</span></label>
+          <label class="channel"><span class="row"><input type="radio" name="ch" id="ch-email" value="email"><b>Email drafts</b></span><span class="note">Drafts in your Outlook with the card image, live-text CTA and unsubscribe footer. You review and send each one.</span></label>
+        </div>
+        <div class="panel">
+          <h3 style="margin-bottom:8px">Cost for this batch</h3>
+          <table class="costs"><tbody id="costs"></tbody></table>
+        </div>
+        <div class="panel stack">
+          <label class="check"><input type="checkbox" id="holdout" checked style="margin-top:4px;accent-color:var(--accent)"><span>Hold out 15% of approved leads at random (not mailed now) to measure real lift</span></label>
+          <label class="check"><input type="checkbox" id="approve" style="margin-top:4px;accent-color:var(--accent)"><span>I reviewed all <b id="nApproved">0</b> cards and the QA flags, and approve this batch for sending.</span></label>
+          <div><button class="btn primary" id="send" disabled>Send batch</button></div>
+        </div>
+      </div>
+      <div class="panel stack">
+        <div class="row" style="justify-content:space-between"><h3>Response tracking</h3><span class="pill info">Example: previous campaign</span></div>
+        <div class="funnel" id="funnel"></div>
+        <p class="note" style="margin:0" id="liftNote"></p>
+        <h3>By dealer</h3>
+        <div class="tablebox"><table class="dtable"><thead><tr><th>Dealer</th><th class="n">Mailed</th><th class="n">Responses</th><th class="n">First contact</th><th class="n">Quoted</th><th class="n">Won</th><th class="n">Revenue</th></tr></thead><tbody id="byDealer"></tbody></table></div>
+        <h3>How a sale gets credited</h3>
+        <ol class="ladder">
+          <li><span class="lv">1</span><span>Prospect scans the QR code, visits the URL or calls the dealer's tracked number</span><span class="pill good">Live</span></li>
+          <li><span class="lv">2</span><span>Dealer taps a one-click outcome link in the lead alert email</span><span class="pill good">Live</span></li>
+          <li><span class="lv">3</span><span>Offer code redeemed on the dealer's reimbursement claim</span><span class="pill info">Pilot</span></li>
+          <li><span class="lv">4</span><span>Warranty registrations matched against mailed leads (12-month window)</span><span class="pill info">Pilot</span></li>
+          <li><span class="lv">5</span><span>Mailed vs holdout sale rates compared</span><span class="pill info">After 3+ campaigns</span></li>
+        </ol>
+        <p class="note" style="margin:0">Writes <code>reports\attribution.xlsx</code> in the campaign folder each time the app syncs.</p>
+      </div>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+const leads=[
+ {id:1,score:92,name:"Bayou Fulfillment Co.",short:"Bayou Fulfillment",seg:"3PL warehouse",city:"Katy",dealer:"gulf",zip:"77494",emp:"140",signals:["Permit","Hiring"],status:"approved",
+  why:"Adding 180,000 sq ft of high-bay space. Rack installation and ongoing maintenance at 30+ ft will need lifts, and two current job posts mention reach trucks and aerial lifts.",
+  ev:[["Permit","Commercial addition, 180,000 sq ft, Katy","Harris County permits · Jul 2026"],["Hiring","“Warehouse maintenance tech – aerial lift certification preferred”","Job board · Sep 2026"],["Site","Tilt-wall distribution center, 14 dock doors","Company website"]],
+  angle:"Congratulate them on the expansion; offer a short-term rental-to-own on scissor lifts for the fit-out.",contact:"Facilities Manager · Operations Director"},
+ {id:2,score:88,name:"Gulf Coast Sign & Lighting",short:"Gulf Coast Sign",seg:"Sign contractor",city:"Pasadena",dealer:"bay",zip:"77506",emp:"45",signals:["Hiring"],status:"approved",
+  why:"Installs signage and parking-lot lighting daily. A current job post lists aerial lift experience as required.",
+  ev:[["Hiring","“Sign installer – boom lift operation required”","Job board · Aug 2026"],["Site","Fabrication shop with a yard of bucket trucks","Company website"]],
+  angle:"Boom lifts that reach where bucket trucks can't park.",contact:"Owner · Operations Manager"},
+ {id:3,score:84,name:"Ship Channel Logistics",short:"Ship Channel Logistics",seg:"Warehouse / port",city:"La Porte",dealer:"bay",zip:"77571",emp:"210",signals:["News","Permit"],status:"approved",
+  why:"Opened a second cross-dock facility near the Bayport terminal. Large facility with high ceilings, and the permit shows new LED high-bay lighting.",
+  ev:[["News","Announces second La Porte cross-dock","Local business journal · Jun 2026"],["Permit","Electrical: high-bay LED retrofit","City permits · Aug 2026"]],
+  angle:"Lighting and maintenance at height in the new building.",contact:"Facility Manager"},
+ {id:4,score:81,name:"Cypress Creek Electrical",short:"Cypress Creek Electrical",seg:"Electrical contractor",city:"Cypress",dealer:"gulf",zip:"77433",emp:"85",signals:["Permit","Hiring"],status:"approved",
+  why:"Listed as the electrical sub on three commercial permits this quarter, all tilt-wall warehouses.",
+  ev:[["Permit","Electrical sub on 3 warehouse permits","Permit data · Q3 2026"],["Hiring","Journeyman electricians, 6 openings","Job board · Sep 2026"]],
+  angle:"Own the lifts instead of renting them for every job.",contact:"Owner · Project Manager"},
+ {id:5,score:77,name:"Lone Star Rack & Shelving",short:"Lone Star Rack",seg:"Rack installer",city:"Stafford",dealer:"gulf",zip:"77477",emp:"38",signals:["News"],status:"new",
+  why:"Installs pallet racking in distribution centers, which is overhead work by definition. Company size is at the low end of the target.",
+  ev:[["Site","Installs racking in DCs across Texas","Company website"],["News","Selected for a 400k sq ft DC project","Press release · May 2026"]],
+  angle:"Narrow-aisle scissor lifts for rack installs.",contact:"Operations Manager"},
+ {id:6,score:73,name:"Brazos HVAC Services",short:"Brazos HVAC",seg:"HVAC contractor",city:"Sugar Land",dealer:"gulf",zip:"77478",emp:"60",signals:["Hiring"],status:"new",
+  why:"Commercial HVAC service with rooftop and ceiling-mounted units. Hiring commercial techs.",
+  ev:[["Hiring","Commercial HVAC technician ×4","Job board · Sep 2026"]],
+  angle:"Compact lifts for ceiling units in occupied buildings.",contact:"Service Manager"},
+ {id:7,score:71,name:"Westpark Metal Fab",short:"Westpark Metal Fab",seg:"Manufacturing",city:"Houston",dealer:"gulf",zip:"77042",emp:"60",signals:["OSHA"],status:"new",
+  why:"High-bay fabrication shop with an overhead crane. No recent growth signal, so it sits in tier B.",
+  ev:[["Registry","Industrial establishment record, NAICS 332312","OSHA data"],["Site","Crane-served fabrication bays","Company website"]],
+  angle:"Maintenance access to cranes and lighting.",contact:"Plant Manager"},
+ {id:8,score:68,name:"Magnolia Distribution",short:"Magnolia Distribution",seg:"Wholesale distributor",city:"Conroe",dealer:"pine",zip:"77301",emp:"95",signals:["Permit"],status:"new",
+  why:"Permit for a mezzanine addition. The website says little about facility size.",
+  ev:[["Permit","Mezzanine addition","County permits · Apr 2026"]],
+  angle:"Mezzanine build-out support.",contact:"Warehouse Manager"},
+ {id:9,score:64,name:"Energy Corridor Facilities Group",short:"Energy Corridor Facilities",seg:"Facility management",city:"Houston",dealer:"gulf",zip:"77042",emp:"120",signals:["Hiring"],status:"new",
+  why:"Manages office towers and campuses. Buying decisions may sit with property owners.",
+  ev:[["Hiring","Building engineer ×3","Job board · Aug 2026"]],
+  angle:"Atrium and lobby maintenance.",contact:"Director of Facilities"},
+ {id:10,score:58,name:"Tomball Precision Machining",short:"Tomball Precision",seg:"Manufacturing",city:"Tomball",dealer:"pine",zip:"77375",emp:"28",signals:[],status:"rejected",
+  why:"Small machine shop with a low ceiling. Weak fit.",
+  ev:[["Site","Single-story shop, about 12,000 sq ft","Company website"]],angle:"—",contact:"Owner"},
+ {id:11,score:55,name:"Northline Glass & Glazing",short:"Northline Glass",seg:"Glazing contractor",city:"Spring",dealer:"pine",zip:"77373",emp:"22",signals:[],status:"new",
+  why:"Storefront glazing, mostly at ground level. Some curtain-wall work.",
+  ev:[["Site","Storefront and curtain-wall projects","Company website"]],angle:"Curtain-wall access.",contact:"Owner"},
+ {id:12,score:52,name:"Harris Ridge Cold Storage",short:"Harris Ridge Cold Storage",seg:"Cold storage",city:"Baytown",dealer:"bay",zip:"77521",emp:"70",signals:[],status:"new",
+  why:"Cold storage needs special cold-rated equipment, so the fit is uncertain.",
+  ev:[["Registry","Refrigerated warehouse, NAICS 493120","EPA facility registry"]],angle:"Cold-rated lift options.",contact:"Operations Manager"}
+];
+const dealers={
+ gulf:{short:"Gulf Lift",name:"Gulf Lift Equipment",branch:"West Houston branch",city:"Katy",phone:"(281) 555-0142"},
+ bay:{short:"Bayport Aerial",name:"Bayport Aerial Supply",branch:"Pasadena branch",city:"Pasadena",phone:"(713) 555-0188"},
+ pine:{short:"Pineland Equip.",name:"Pineland Equipment",branch:"North Houston branch",city:"Conroe",phone:"(936) 555-0117"}
+};
+const codeOf=l=>["K7Q3MX","R4TW9P","H8ZB2C","M3XK7V","T9PD4Q","W2HN8R","B6VQ3Z","C5RM9T","D8KW2H","F3TZ6N","G7XP4M","J2QV8B"][l.id-1];
+const tierOf=s=>s>=80?"A":s>=65?"B":"C";
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function toast(t){const el=document.getElementById("toast");el.textContent=t;el.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>el.hidden=true,2800)}
+
+/* Navigation */
+function go(n){
+  document.querySelectorAll(".screen").forEach(s=>s.hidden=s.id!=="s"+n);
+  document.querySelectorAll(".step").forEach(b=>{const k=+b.dataset.step;b.setAttribute("aria-selected",k===n);b.classList.toggle("done",k<n)});
+  if(n===4)renderSend();
+  window.scrollTo({top:0});
+}
+document.querySelectorAll(".step").forEach(b=>b.onclick=()=>go(+b.dataset.step));
+
+/* Step 1 */
+const scopes={
+ dealer:{est:"610",fit:"240",cost:"$18–30",time:"~12 min",note:"One dealer's territory (41 ZIP codes). Cards will be co-branded with this dealer."},
+ metro:{est:"1,310",fit:"520",cost:"$35–60",time:"~25 min",note:"Interactive. Results stream in, and deep research runs on the top 200."},
+ state:{est:"9,800",fit:"3,900",cost:"$240–420",time:"~3 h",note:"Runs as a background job split by dealer territory, with a budget cap of $450. It resumes if the laptop sleeps."},
+ us:{est:"96,000",fit:"38,000",cost:"$2,300–4,100",time:"~1 day",note:"Runs as a background job split by dealer territory, and resumes if the laptop sleeps. Deep research on the top 5% per territory. Asks for confirmation first."}
+};
+function renderPreview(){
+  const k=document.querySelector('input[name="scope"]:checked').value, s=scopes[k];
+  document.getElementById("preview").innerHTML=`<div><b>${s.est}</b><span>establishments match</span></div><div><b>${s.fit}</b><span>with 20+ employees</span></div><div><b>${s.cost}</b><span>estimated run cost</span></div><div><b>${s.time}</b><span>estimated time</span></div>`;
+  document.getElementById("scopeNote").textContent=s.note+" Counts come from Census County Business Patterns.";
+}
+document.querySelectorAll('input[name="scope"]').forEach(r=>r.onchange=renderPreview);
+renderPreview();
+document.getElementById("run").onclick=()=>{toast("Search finished: 148 candidates scored (sample data)");go(2)};
+document.getElementById("send1").onclick=()=>{const i=document.getElementById("brief");if(i.value.trim()){toast("The profile would update from your message in the real app");i.value=""}};
+document.getElementById("mic1").onclick=document.getElementById("mic3").onclick=()=>toast("Voice input uses speech-to-text in the real app");
+
+/* Step 2 */
+let filter="all", selected=1;
+function renderSummary(){
+  const c={A:0,B:0,C:0};leads.forEach(l=>c[tierOf(l.score)]++);
+  const ap=leads.filter(l=>l.status==="approved").length;
+  document.getElementById("summary").innerHTML=`<span><span class="k">148</span><span class="l">scored (12 shown)</span></span><span><span class="k">${c.A}</span><span class="l">tier A</span></span><span><span class="k">${c.B}</span><span class="l">tier B</span></span><span><span class="k">${c.C}</span><span class="l">tier C</span></span><span><span class="k">${ap}</span><span class="l">approved</span></span><span><span class="k">$41.80</span><span class="l">spent on this run</span></span>`;
+  const fs=[["all","All"],["A","Tier A"],["B","Tier B"],["C","Tier C"],["approved","Approved"],["new","To review"]];
+  document.getElementById("filters").innerHTML=fs.map(([k,t])=>`<button data-f="${k}" aria-pressed="${filter===k}">${t}</button>`).join("");
+  document.querySelectorAll("#filters button").forEach(b=>b.onclick=()=>{filter=b.dataset.f;renderLeads()});
+}
+const statusPill=s=>s==="approved"?'<span class="pill good">Approved</span>':s==="rejected"?'<span class="pill bad">Rejected</span>':'<span class="pill info">To review</span>';
+function renderLeads(){
+  renderSummary();
+  const list=leads.filter(l=>filter==="all"||tierOf(l.score)===filter||l.status===filter);
+  document.getElementById("rows").innerHTML=list.map(l=>`<tr data-id="${l.id}" class="${l.id===selected?"sel":""}" tabindex="0">
+    <td><span class="score"><span class="tier ${tierOf(l.score)}">${tierOf(l.score)}</span>${l.score}</span></td>
+    <td><div class="co">${esc(l.name)}</div><div class="sub">${l.emp} employees</div></td>
+    <td>${esc(l.seg)}</td><td>${esc(l.city)}</td><td>${esc(dealers[l.dealer].short)}</td>
+    <td><div class="sig">${l.signals.map(s=>`<span>${s}</span>`).join("")||'<span class="sub">none</span>'}</div></td>
+    <td>${statusPill(l.status)}</td></tr>`).join("");
+  document.querySelectorAll("#rows tr").forEach(tr=>{const f=()=>{selected=+tr.dataset.id;renderLeads()};tr.onclick=f;tr.onkeydown=e=>{if(e.key==="Enter")f()}});
+  renderDetail();
+}
+function renderDetail(){
+  const l=leads.find(x=>x.id===selected);
+  document.getElementById("detail").innerHTML=`
+    <div class="row" style="justify-content:space-between"><span class="score"><span class="tier ${tierOf(l.score)}">${tierOf(l.score)}</span>${l.score} / 100</span>${statusPill(l.status)}</div>
+    <div><h2>${esc(l.name)}</h2><div class="sub">${esc(l.seg)} · ${esc(l.city)}, TX · ${l.emp} employees</div></div>
+    <div><h3 style="margin-bottom:4px">Why it fits</h3><p style="margin:0">${esc(l.why)}</p></div>
+    <div><h3 style="margin-bottom:6px">Evidence</h3><ul class="evidence">${l.ev.map(([t,x,d])=>`<li><span class="pill info">${t}</span><span>${esc(x)}</span><span class="d">${esc(d)}</span></li>`).join("")}</ul></div>
+    <div><h3 style="margin-bottom:4px">Suggested angle</h3><p style="margin:0">${esc(l.angle)}</p></div>
+    <div><h3 style="margin-bottom:4px">Who to address</h3><p style="margin:0">${esc(l.contact)}</p></div>
+    <div><h3 style="margin-bottom:4px">Assigned dealer</h3><p style="margin:0">${esc(dealers[l.dealer].name)} · ${esc(dealers[l.dealer].branch)} <span class="sub">(territory match: ZIP ${l.zip})</span></p></div>
+    <div class="siteview">Live Street View and map of the site appear here, shown through Google's API.<br>For viewing only: not stored, not printed.</div>
+    <div class="row"><button class="btn primary" data-act="approved">Approve</button><button class="btn" data-act="rejected">Reject</button><button class="btn">Research deeper</button><button class="btn">Change dealer</button></div>`;
+  document.querySelectorAll("#detail [data-act]").forEach(b=>b.onclick=()=>{l.status=b.dataset.act;renderLeads();toast(`${l.short}: ${b.dataset.act}`)});
+}
+renderLeads();
+
+/* Postcards */
+function scene(o){
+  const u="g"+Math.random().toString(36).slice(2,8), dusk=o.tod==="dusk";
+  const sky=dusk?["#f4a45c","#6b4f86"]:["#eef4f8","#9fc3e0"];
+  const wall=dusk?"#b7aea4":"#dcd6ca", panel=dusk?"#a39a90":"#c9c2b4", ground=dusk?"#5d5a63":"#8e949a";
+  const x0=o.liftSide==="left"?95:395;
+  let panels="";for(let x=120;x<540;x+=60)panels+=`<line x1="${x}" y1="138" x2="${x}" y2="305" stroke="${panel}" stroke-width="2"/>`;
+  let docks="";[150,230,310,390,470].forEach(x=>docks+=`<rect x="${x-24}" y="232" width="48" height="73" fill="${dusk?"#4b5560":"#5f6b76"}"/><line x1="${x-24}" y1="250" x2="${x+24}" y2="250" stroke="#77838d"/><line x1="${x-24}" y1="268" x2="${x+24}" y2="268" stroke="#77838d"/><line x1="${x-24}" y1="286" x2="${x+24}" y2="286" stroke="#77838d"/>`+(dusk?`<rect x="${x-6}" y="222" width="12" height="5" fill="#ffd98a"/>`:""));
+  let sc="";for(let i=0;i<3;i++){const yb=298-i*36,yt=yb-36;sc+=`<line x1="${x0+10}" y1="${yb}" x2="${x0+100}" y2="${yt}" stroke="#e8a317" stroke-width="5"/><line x1="${x0+100}" y1="${yb}" x2="${x0+10}" y2="${yt}" stroke="#e8a317" stroke-width="5"/><circle cx="${x0+55}" cy="${yb-18}" r="3" fill="#2b3036"/>`}
+  const name=(o.name||"").toUpperCase(), fs=Math.min(19,440/Math.max(name.length,1));
+  const src=o.src==="rep"?`<rect x="0" y="0" width="600" height="400" fill="#000" opacity=".06"/>`:"";
+  return `<svg viewBox="0 0 600 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+   <defs><linearGradient id="${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${sky[1]}"/><stop offset="1" stop-color="${sky[0]}"/></linearGradient></defs>
+   <rect width="600" height="400" fill="url(#${u})"/>
+   ${dusk?'<circle cx="480" cy="120" r="34" fill="#ffd28a" opacity=".85"/>':""}
+   <rect x="0" y="300" width="600" height="100" fill="${ground}"/>
+   <rect x="0" y="302" width="600" height="4" fill="${dusk?"#77747c":"#b0b5ba"}"/>
+   <rect x="60" y="130" width="480" height="175" fill="${wall}"/>
+   <rect x="60" y="126" width="480" height="12" fill="${panel}"/>${panels}${docks}
+   <rect x="${300-150}" y="152" width="300" height="36" rx="2" fill="#1f3a5a"/>
+   <text x="300" y="${170+fs*.35}" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-weight="700" font-size="${fs}" fill="#fff" letter-spacing="1">${esc(name)}</text>
+   ${[40,80,560].map((x,i)=>`<line x1="${x}" y1="${360+i*6}" x2="${x+40}" y2="${360+i*6}" stroke="#f2f2f2" stroke-width="3" opacity=".6"/>`).join("")}
+   <ellipse cx="${x0+55}" cy="337" rx="72" ry="6" fill="#000" opacity=".28"/>
+   <rect x="${x0}" y="298" width="110" height="26" rx="3" fill="#2b3036"/>
+   <rect x="${x0}" y="296" width="110" height="9" fill="#e8a317"/>
+   <circle cx="${x0+20}" cy="327" r="9" fill="#17191c"/><circle cx="${x0+90}" cy="327" r="9" fill="#17191c"/>
+   ${sc}
+   <rect x="${x0-5}" y="180" width="120" height="10" fill="#e8a317"/>
+   <path d="M${x0-3} 180 V154 H${x0+113} V180 M${x0-3} 167 H${x0+113}" stroke="#2b3036" stroke-width="3" fill="none"/>
+   ${src}</svg>`;
+}
+const fill=(t,l)=>t.replace(/\{city\}/g,l.city).replace(/\{short\}/g,l.short);
+function card(v,l,src){
+  const s=scene({name:l.name,liftSide:v.liftSide,tod:v.tod,src});
+  const hl=esc(fill(v.headline,l)), tg=esc(fill(v.tagline,l));
+  let ov;
+  if(v.layout==="bold") ov=`<div class="ov lay-bold"><p class="hl">${hl}</p><p class="tg">${tg}</p></div>`;
+  else if(v.layout==="band") ov=`<div class="ov lay-band"><div class="band"><div><p class="hl">${hl}</p><p class="tg">${tg}</p></div><span class="cta">Scan for a demo</span></div></div>`;
+  else if(v.layout==="tech") ov=`<div class="ov lay-tech"><div class="side"><p class="hl">${hl}</p><ul><li>26 ft working height</li><li>1,000 lb platform</li><li>Non-marking tires</li></ul></div></div>`;
+  else ov=`<div class="ov lay-dusk"><p class="hl">${hl}</p><p class="tg">${tg}</p><span class="cta">Book a site demo</span></div>`;
+  const attr=src==="mapillary"?'<span class="attr">Photo: Mapillary contributor · CC BY-SA 4.0</span>':src==="rep"?'<span class="attr">Photo: dealer field visit</span>':"";
+  const stamp=src==="streetview"?'<span class="stamp">NOT ALLOWED IN PRINT</span>':"";
+  return `<div class="pc">${s}${ov}<span class="logo">YOUR LOGO</span>${attr}${stamp}</div>`;
+}
+let variants=[
+ {name:"Bold hero",tone:"Bold",layout:"bold",liftSide:"right",tod:"day",headline:"Reaching new heights in {city}, {short}?",tagline:"Scissor and boom lifts for high-bay work, delivered this week."},
+ {name:"Clean band",tone:"Friendly",layout:"band",liftSide:"left",tod:"day",headline:"Congrats on the expansion, {short}.",tagline:"Let's get your new space fitted out faster."},
+ {name:"Spec panel",tone:"Technical",layout:"tech",liftSide:"right",tod:"day",headline:"Built for 30-ft racking in {city}.",tagline:""},
+ {name:"Dusk premium",tone:"Premium",layout:"dusk",liftSide:"left",tod:"dusk",headline:"Work at height, on your schedule.",tagline:"Same-week delivery across greater Houston."}
+];
+let vSel=0, hist=[], srcSel="ai";
+const sample=()=>leads[0];
+function qr(seed){let x=seed*9301+49297,cells="";const n=21,f=(r,c)=>(r<7&&c<7)||(r<7&&c>=n-7)||(r>=n-7&&c<7);
+  for(let r=0;r<n;r++)for(let c=0;c<n;c++){if(f(r,c))continue;x=(x*9301+49297)%233280;if(x/233280>.5)cells+=`<rect x="${c}" y="${r}" width="1" height="1"/>`}
+  const fp=(X,Y)=>`<rect x="${X}" y="${Y}" width="7" height="7"/><rect x="${X+1}" y="${Y+1}" width="5" height="5" fill="#fff"/><rect x="${X+2}" y="${Y+2}" width="3" height="3"/>`;
+  return `<svg viewBox="-1 -1 23 23" aria-label="QR code (illustrative)"><rect x="-1" y="-1" width="23" height="23" fill="#fff"/><g fill="#111">${cells}${fp(0,0)}${fp(14,0)}${fp(0,14)}</g></svg>`}
+function backCard(l){const d=dealers[l.dealer],c=codeOf(l);
+  return `<div class="pc back"><div class="bmsg"><span class="hi">Hello from ${esc(d.name)},</span>
+   <p>${esc(l.id===1?"Congrats on the 180,000 sq ft addition in Katy. Fitting out high-bay racking goes faster with the right lift on site.":"We help "+l.seg.toLowerCase()+" teams in "+l.city+" work safely at height.")}</p>
+   <ul><li>Same-week delivery and operator training</li><li>Local service from ${esc(d.branch.replace(" branch",""))}</li></ul>
+   <div class="offer">${qr(l.id)}<div><b>LIFT-${c}</b><span>Mention this code for free delivery and first-year service. go.yourbrand.com/${c}</span></div></div>
+   <div class="dealer">Your local dealer: <b>${esc(d.name)}</b><br>${esc(d.city)}, TX · ${d.phone}</div></div>
+   <div class="addr"><span class="stamp2">First-Class Mail<br>US Postage Paid</span><div><div class="imb">|||·||·|·|||·|·||·||·|||·|·</div><div class="to">Attn: Facilities Manager<br>${esc(l.name)}<br>${l.id===1?"24500 Brazos Way":"1200 Example Pkwy"}<br>${esc(l.city)}, TX ${l.zip}</div></div></div></div>`}
+function renderVariants(){
+  document.getElementById("variants").innerHTML=variants.map((v,i)=>`<div class="variant" role="button" tabindex="0" data-i="${i}" aria-pressed="${i===vSel}"><span class="vl">${esc(v.name)}<span>${v.tone} · ${v.liftSide==="left"?"lift left":"lift right"}</span></span>${card(v,sample(),srcSel)}</div>`).join("");
+  document.querySelectorAll(".variant").forEach(b=>{b.onclick=()=>{vSel=+b.dataset.i;renderVariants()};b.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();b.click()}}});
+  document.getElementById("sides").innerHTML=card(variants[vSel],sample(),srcSel)+backCard(sample());
+  document.getElementById("history").innerHTML=hist.length?hist.map(h=>`<div>${esc(h)}</div>`).join(""):"<div>No edits yet.</div>";
+}
+let undoStack=[];
+document.getElementById("apply").onclick=()=>{
+  const t=document.getElementById("instr").value.toLowerCase(), v=variants[vSel], before=JSON.stringify(v), p=[];
+  if(/short/.test(t)){v.headline=v.layout==="tech"?"Racking at 30 ft? Easy.":"Lift more in {city}.";p.push(`replace /front/slots/headline/value "${v.headline}"`)}
+  if(/left/.test(t)&&v.liftSide!=="left"){v.liftSide="left";p.push('replace /front/slots/hero/machinePosition "left"')}
+  else if(/right/.test(t)&&v.liftSide!=="right"){v.liftSide="right";p.push('replace /front/slots/hero/machinePosition "right"')}
+  if(/sunset|dusk|warm/.test(t)&&v.tod!=="dusk"){v.tod="dusk";p.push('replace /front/slots/hero/lighting "golden-hour"')}
+  if(/day|bright/.test(t)&&v.tod!=="day"){v.tod="day";p.push('replace /front/slots/hero/lighting "daylight"')}
+  if(!p.length){toast("In the real app, the assistant turns any request into a design patch. This mockup understands: shorter, left, right, sunset, daylight.");return}
+  undoStack.push([vSel,before]);hist.unshift(`${v.name}: `+p.join("; "));renderVariants();toast(`Applied ${p.length} change${p.length>1?"s":""} to “${v.name}”`);
+};
+document.getElementById("undo").onclick=()=>{const u=undoStack.pop();if(!u)return toast("Nothing to undo");variants[u[0]]=JSON.parse(u[1]);hist.shift();renderVariants()};
+document.querySelectorAll('input[name="src"]').forEach(r=>r.onchange=()=>{srcSel=r.value;document.getElementById("svAlert").hidden=srcSel!=="streetview";renderVariants()});
+document.getElementById("saveTpl").onclick=()=>toast(srcSel==="streetview"?"Can't save: Street View images can't be used on cards":`Saved template “${variants[vSel].name}” with merge fields`);
+document.getElementById("applyAll").onclick=()=>{
+  if(srcSel==="streetview")return toast("Choose a print-safe image source first");
+  const ap=leads.filter(l=>l.status==="approved"), v=variants[vSel];
+  const flags={2:["warn","Headline 61/60 chars, auto-shortened"],4:["warn","Low-confidence site type, check image"]};
+  document.getElementById("batchTitle").textContent=`${ap.length} cards from “${v.name}”`;
+  document.getElementById("batch").innerHTML=ap.map(l=>{const f=flags[l.id];return `<div class="bitem">${card(v,l,srcSel)}<div class="meta"><b>${esc(l.short)} · ${esc(l.city)}</b>${f?`<span class="pill ${f[0]}">Check</span>`:'<span class="pill good">QA pass</span>'}</div>${f?`<span class="sub">${f[1]}</span>`:""}</div>`}).join("");
+  const slug=l=>l.name.replace(/[^A-Za-z0-9 ]/g,"").trim().replace(/ +/g,"-");
+  document.getElementById("files").textContent=["postcards\\print\\","postcards\\email\\"].flatMap((f,i)=>ap.map(l=>`${f}L${String(l.id).padStart(4,"0")}_${slug(l)}.${i?"png":"pdf"}`)).concat(["postcards\\proofs.pdf",...[...new Set(ap.map(l=>l.dealer))].map(d=>`dealers\\${dealers[d].name}\\lead-packet.pdf`),"mailing\\manifest.csv  (tracking codes + addresses)"]).join("\n");
+  document.getElementById("batchWrap").hidden=false;
+  document.getElementById("batchWrap").scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
+};
+renderVariants();
+
+/* Step 4 */
+function renderSend(){
+  const n=leads.filter(l=>l.status==="approved").length, mail=document.getElementById("ch-mail").checked;
+  document.getElementById("nApproved").textContent=n;
+  const rows=mail?[["Print + First Class postage, 6×9",n,0.71],["Address verification",n,0.05],["Personalized images",n,0.06],["Lead research (share of run)",n,0.28]]
+                 :[["Email drafts in Outlook",n,0],["Personalized images",n,0.06],["Lead research (share of run)",n,0.28]];
+  let tot=0;const h=rows.map(([t,q,c])=>{tot+=q*c;return `<tr><td>${t} <span class="sub">× ${q}</span></td><td>$${(q*c).toFixed(2)}</td></tr>`}).join("");
+  document.getElementById("costs").innerHTML=h+`<tr class="total"><td>Total · $${(n?tot/n:0).toFixed(2)} per lead</td><td>$${tot.toFixed(2)}</td></tr>`;
+  document.getElementById("send").textContent=mail?`Mail ${n} postcards`:`Create ${n} email drafts`;
+}
+document.querySelectorAll('input[name="ch"]').forEach(r=>r.onchange=renderSend);
+document.getElementById("approve").onchange=e=>document.getElementById("send").disabled=!e.target.checked;
+document.getElementById("send").onclick=()=>toast("Batch queued and dealer packets written to the folder. This is a mockup, so nothing was sent.");
+document.getElementById("openFolder").onclick=()=>toast("Opens the campaign folder in File Explorer in the real app");
+const fun=[["Mailed",150],["Delivered",146],["Responded",14],["Dealer contacted",12],["Quoted",6],["Won",3]];
+const bd=[["Gulf Lift Equipment",72,8,"1.2 days",4,2,"$96,400"],["Bayport Aerial Supply",46,4,"3.8 days",2,1,"$38,900"],["Pineland Equipment",32,2,"no update",0,0,"—"]];
+document.getElementById("byDealer").innerHTML=bd.map(r=>`<tr><td>${r[0]}</td>${r.slice(1).map(v=>`<td class="n">${v}</td>`).join("")}</tr>`).join("");
+document.getElementById("liftNote").textContent="Holdout: 26 comparable leads not mailed, 0 sales in the same window. That's directional only; the numbers become meaningful after several campaigns.";
+document.getElementById("funnel").innerHTML=fun.map(([t,v])=>`<div class="bar"><span>${t}</span><span class="track"><span class="fill" style="display:block;width:${Math.max(2,v/150*100)}%"></span></span><span class="v">${v}</span></div>`).join("");
+</script>
+</body></html>
