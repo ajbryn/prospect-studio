@@ -40,7 +40,7 @@ The main session is the **lead**; project subagents live in `.claude/agents/` (`
 ## Stack & commands
 
 - .NET 10 (LTS), C# latest, `Nullable` enabled, `TreatWarningsAsErrors` in Core/Infrastructure.
-- MCP: `ModelContextProtocol` (1.x) + `Microsoft.Extensions.Hosting`, stdio transport.
+- MCP: `ModelContextProtocol` + `Microsoft.Extensions.Hosting`, stdio transport. Tool errors are mapped centrally in a `CallToolFilter` (`WithRequestFilters`/`AddCallToolFilter`), not per tool.
 - Storage: SQLite via **EF Core 10** (`Microsoft.EntityFrameworkCore.Sqlite`), code-first migrations in `ProspectStudio.Infrastructure`. Use `IDbContextFactory<ProspectDbContext>` (a short-lived context per tool call or job step, never a long-lived one). WAL mode on.
 - Data: `DuckDB.NET.Data.Full` (with `httpfs` and `spatial` extensions) for Overture Places and Census geometries.
 - Excel: `ClosedXML`. Templates: `Fluid.Core` (Liquid syntax, sandboxed). Rendering: `Microsoft.Playwright` (Chromium). QR: `QRCoder`. JSON Schema: `JsonSchema.Net`. HTML text: `AngleSharp`. Logging: `Serilog` (file + stderr).
