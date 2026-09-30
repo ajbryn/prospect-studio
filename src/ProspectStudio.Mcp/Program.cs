@@ -3,8 +3,12 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Protocol;
 using ProspectStudio.Core;
+using ProspectStudio.Core.Campaigns;
+using ProspectStudio.Core.SearchProfiles;
 using ProspectStudio.Core.Status;
 using ProspectStudio.Infrastructure.Config;
+using ProspectStudio.Infrastructure.Storage;
+using ProspectStudio.Infrastructure.Workspace;
 using ProspectStudio.Mcp.Cli;
 using ProspectStudio.Mcp.Errors;
 using ProspectStudio.Mcp.Hosting;
@@ -29,7 +33,12 @@ try
     builder.Services.AddSerilog(Log.Logger);
 
     builder.Services.AddSingleton(options);
+    builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
     builder.Services.AddSingleton<StatusService>();
+    builder.Services.AddProspectStudioStorage(options.DatabasePath);
+    builder.Services.AddSingleton<ICampaignWorkspace, FileSystemCampaignWorkspace>();
+    builder.Services.AddSingleton<SearchProfileValidator>();
+    builder.Services.AddSingleton<CampaignService>();
 
     builder.Services
         .AddMcpServer(server => server.ServerInfo = new Implementation
@@ -48,7 +57,10 @@ try
         options.Home,
         options.Data);
 
-    await builder.Build().RunAsync();
+    var host = builder.Build();
+    var lifetime = host.Services.GetRequiredService<IHostApplicationLifetime>();
+    await StartupTasks.RunAsync(host.Services, options, lifetime.ApplicationStopping);
+    await host.RunAsync();
     return 0;
 }
 catch (Exception exception)

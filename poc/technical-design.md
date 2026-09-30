@@ -122,6 +122,8 @@ poc/fixtures/, poc/schemas/                     # copied into test output as con
 | `PS_TRACKING_BASE_URL` | `https://example.com/lp?code={code}` | QR/short URL target; `{code}` placeholder, or `?code=` appended |
 | `PS_OFFER_PREFIX` | from brand kit, else `LIFT` | Printed offer code prefix |
 | `PS_USER_AGENT` | `ProspectStudioBot/0.1 (+mailto:marketing@example.com)` | Web fetch identity |
+| `PS_IMAGERY_PROVIDER` | `streetview` | Street-level reference imagery: `streetview`, `mapillary` or `none`. The other configured provider is the fallback when the preferred one has no coverage |
+| `MAPILLARY_TOKEN` | none | Mapillary client token; enables the `mapillary` provider |
 | `PS_OVERTURE_RELEASE` | discovered latest, else `2026-09-23.1` | Overture release to extract |
 | `PS_CBP_YEAR` | discovered latest available | Census CBP dataset year |
 | `CENSUS_API_KEY` | none | Optional; raises Census rate limits |
@@ -159,7 +161,7 @@ Documents\Prospect Studio\
 | Table | Key columns |
 |---|---|
 | `__EFMigrationsHistory` | Managed by EF Core |
-| `campaigns` | id (`cmp_` + 6 chars), name, slug, product, folder_path, status, profile_json, geo_json, created_at, updated_at |
+| `campaigns` | id (`cmp_` + 6 chars), name, slug (unique; duplicate detection, case-insensitive), product, notes, folder_path, status, profile_json, profile_saved_at, geo_json, created_at, updated_at |
 | `dealers` | id, name, website, alert_email, logo_file |
 | `dealer_branches` | id, dealer_id, name, address, city, state, zip, lat, lon, phone, tracking_phone |
 | `territories` | id, dealer_id, branch_id, level (`zip`/`county`), code, priority |
@@ -189,7 +191,8 @@ Documents\Prospect Studio\
 - **Bulk writes:** `find_candidates` and `prefetch_websites` can write thousands of rows. Use batches of ~500 per `SaveChangesAsync`, with `ChangeTracker.AutoDetectChangesEnabled = false` during the batch and a fresh context per batch. For set-based updates (re-scoring, dealer assignment, suppression), use `ExecuteUpdateAsync`/`ExecuteDeleteAsync`. Target: 5,000 candidates stored in < 10 s.
 - **Reads for tools:** `AsNoTracking()` and projection to compact DTOs (`Select(...)`) for `list_leads`, `get_campaign` and similar, so tool responses stay small and fast.
 - **Concurrency:** single user, so there's no optimistic concurrency token in the POC. Background jobs and tool calls can overlap; WAL mode plus short transactions keeps SQLite locking manageable. Retry once on `SQLITE_BUSY`.
-- **Dates:** store `DateTimeOffset` as UTC ISO-8601 text (the SQLite provider's default converter) so values sort correctly and stay readable.
+- **Dates:** a model-level convention (`ConfigureConventions`) maps every `DateTimeOffset` to a UTC `DateTime` via `UtcDateTimeOffsetConverter`. **Do not revert this to the provider's default converter** — that default keeps the offset suffix, and EF then refuses `ORDER BY` on the column ("convert the values to a supported type"), which breaks any dated list. The conversion is provider-agnostic and correct on SQL Server and PostgreSQL too, so it is a portability improvement rather than a SQLite workaround. Domain types in Core still expose `DateTimeOffset`. Storage is UTC throughout; the only human-facing local time is the campaign folder name, which is computed and never persisted. Revisit only if a chunk needs to store a genuine local offset (e.g. a dealer-local mail date).
+- **Wire format:** tool JSON serializes timestamps as `yyyy-MM-ddTHH:mm:ssZ` through a converter on the shared serializer options, not as `+00:00` with fractional seconds, which matches the examples in [mcp-tools.md](mcp-tools.md) and keeps paged lists compact.
 - **Portability:** SQLite is the target for 1 user or several users with separate data. If 2–5 users later need **shared** campaigns and leads, move to a database server (Azure SQL/SQL Server preferred, PostgreSQL acceptable) by swapping the EF provider, creating a new baseline migration and running a one-off data copy. Don't put the SQLite file on a network share or OneDrive. The provider-neutral rules in `CLAUDE.md` keep this move cheap. Overture/Census reference data stays in local DuckDB/Parquet either way.
 
 ## 6. Reference data & Overture
@@ -389,7 +392,27 @@ Parameters: `buildingType` (`warehouse`, `plant`, `shop`, `office`, `campus`), `
 | `contrast` | Text vs declared background color contrast < 4.5:1 | warning (S) |
 | `asset-license` | Any asset without `print` in `allowedUses` when rendering print | error (blocks print) |
 
-### 10.6 Dealer packets
+### 10.6 Street-level reference imagery (`IStreetImageryProvider`)
+
+Lets the user see what a lead's site actually looks like, so the sales team can judge whether a real photograph is worth commissioning. **Reference only — never print.**
+
+- Abstraction `IStreetImageryProvider` in `Core/Postcards` with `FindAsync(lat, lon, heading?, ct)` returning image bytes plus provenance, and a `CoverageAsync` probe where the provider offers a cheap one. Implementations live in `Infrastructure/Imagery`:
+  - **`GoogleStreetViewProvider`** — Street View Static API, keyed by `GOOGLE_MAPS_API_KEY`. Call the free `…/streetview/metadata` endpoint first to check coverage without spending a request.
+  - **`MapillaryImageryProvider`** — keyed by `MAPILLARY_TOKEN`. Needs a spatial search for images near the coordinate ranked by distance and bearing, and often finds nothing useful outside dense urban areas, so it is the harder of the two to implement well.
+- `PS_IMAGERY_PROVIDER` picks the preferred provider (default `streetview` for coverage); the other configured provider is the fallback on a miss. `none` disables the feature and the tool returns `UNSUPPORTED`.
+- The image is saved to `campaigns\<campaign>\reference\<LeadId>_<provider>.jpg` with a sidecar:
+
+```json
+{ "source": "google-streetview", "license": "google-maps-platform-tos",
+  "allowedUses": ["screen"], "attribution": "© Google",
+  "retrievedAt": "2026-10-02T14:05:00Z", "lat": 29.7604, "lon": -95.3698, "heading": 210 }
+```
+
+Mapillary's sidecar uses `"license": "CC-BY-SA-4.0"` and the contributor's attribution string. **Both get `allowedUses: ["screen"]`** — Street View because its terms forbid print and promotional use, Mapillary because share-alike would arguably propagate to the postcard artwork. §10.5's `asset-license` check therefore blocks either from print and email output, which is the enforcement point; nothing relies on a person remembering the rule.
+
+- Provenance (provider, URL, retrieval time, coordinates) is recorded so a later photographer brief can say exactly which view was being looked at.
+
+### 10.7 Dealer packets
 HTML → PDF, **Letter**, one page per lead: company, site address, dealer/branch, score/tier + rationale, evidence list (claim, date, URL), suggested angle, contact roles, tracking code, and a thumbnail of the card front. The dealer `leads.xlsx` has the same columns plus Outcome (dropdown: New, Contacted, Meeting/Demo, Quote sent, Won, Lost, Not a fit, Already a customer), Date contacted, Units, Model, Value, Notes.
 
 ## 11. Skills (plugin)

@@ -15,6 +15,7 @@ public static class PsOptionsFactory
     public const string UserAgentVariable = "PS_USER_AGENT";
     public const string OvertureReleaseVariable = "PS_OVERTURE_RELEASE";
     public const string CbpYearVariable = "PS_CBP_YEAR";
+    public const string SeedFixturesVariable = "PS_SEED_FIXTURES";
     public const string CensusKeyVariable = "CENSUS_API_KEY";
     public const string OpenAiKeyVariable = "OPENAI_API_KEY";
     public const string GeminiKeyVariable = "GEMINI_API_KEY";
@@ -48,6 +49,7 @@ public static class PsOptionsFactory
             UserAgent = Value(environment, UserAgentVariable) ?? DefaultUserAgent,
             OvertureRelease = Value(environment, OvertureReleaseVariable) ?? DefaultOvertureRelease,
             CbpYear = Year(Value(environment, CbpYearVariable)),
+            SeedFixtures = Flag(Value(environment, SeedFixturesVariable)),
             Keys = new ApiKeys
             {
                 Census = Value(environment, CensusKeyVariable),
@@ -61,6 +63,9 @@ public static class PsOptionsFactory
 
     private static string? Value(IReadOnlyDictionary<string, string?> environment, string name) =>
         environment.TryGetValue(name, out var value) && !string.IsNullOrWhiteSpace(value) ? value.Trim() : null;
+
+    private static bool Flag(string? raw) =>
+        raw is not null && (raw is "1" || raw.Equals("true", StringComparison.OrdinalIgnoreCase) || raw.Equals("yes", StringComparison.OrdinalIgnoreCase));
 
     private static int? Year(string? raw) =>
         int.TryParse(raw, NumberStyles.Integer, CultureInfo.InvariantCulture, out var year) && year is >= 1900 and <= 2999

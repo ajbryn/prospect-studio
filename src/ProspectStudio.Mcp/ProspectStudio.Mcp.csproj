@@ -12,11 +12,20 @@
     <PackageReference Include="Serilog.Extensions.Hosting" Version="10.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ProspectStudio.Core\ProspectStudio.Core.csproj" />
     <ProjectReference Include="..\ProspectStudio.Infrastructure\ProspectStudio.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <!-- The fixture brand kit travels with the server, so PS_SEED_FIXTURES=1 also works from a built or
+       published server and not just from the repo (implementation-plan C1). -->
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)..\..\poc\fixtures\brand-kit\**\*"
+             LinkBase="fixtures\brand-kit"
+             CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

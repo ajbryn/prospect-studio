@@ -106,6 +106,12 @@ flowchart LR
 | 4 | **Skill drafting ∥ code** | Skills only read `mcp-tools.md` | `skill-author`: `plugin/` only. Finalized in C9 against the real tool list |
 | any after C8 | **C8b** (optional) | Separate Google store | Coordinate its migration (spreadsheet ID on the campaign) with whoever owns the wave's migration |
 
+## Two things that bite in practice
+
+**A running MCP server blocks builds.** `.mcp.json` points Claude Code at `src/ProspectStudio.Mcp/bin/Debug/net10.0/ProspectStudio.Mcp.dll`, which is exactly where builds write, so the connected dev server holds those DLLs open. The symptom is `MSB3026 … being used by another process … .NET Host (NNNN)` retrying up to ten times. **Disconnect the dev server before building** (that is the agreed resolution — we keep `.mcp.json` on `bin/Debug` as technical-design §2 specifies rather than adding a second copy). Claude Desktop's server runs from `dist/mcp`, so it does not block builds, but it *does* block `tools/publish-mcp.ps1`. Subagents must report the lock rather than killing processes; only the lead kills one, and only with Andy's say-so.
+
+**A subagent does not survive a Claude Code restart.** Its file edits are on disk, but the agent itself is gone and `SendMessage` cannot resume it, whatever a task notification may imply. So: for any long subagent task, prefer committing its output at natural milestones, and when a session ends mid-run, inspect the working tree and relaunch a fresh agent with a brief that says what already exists and what remains. Do not assume the partial work is broken — check whether its tests fail for the right reason first.
+
 **Rules for parallel work**
 1. **Commit the baseline first.** Worktrees branch from the default branch, so uncommitted docs, fixtures and code are invisible to worktree agents. Commit before starting a wave.
 2. **Run parallel implementers with worktree isolation.** Ask the lead to spawn them "in a worktree" (the Agent tool's `isolation: "worktree"`). Test-engineer and implementer for the same chunk share one worktree (run sequentially in it).
