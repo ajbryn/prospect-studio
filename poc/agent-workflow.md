@@ -53,7 +53,23 @@ flowchart LR
 4. **Implement:** `chunk-implementer` makes them pass. For large chunks (C2, C4, C10, C11), the lead may split the work into two sequential implementer tasks (e.g., C10: layouts + scene builder, then renderer + QA).
 5. **Review:** `spec-reviewer`. For fixes, the lead **resumes the same implementer** (SendMessage) so it keeps its context.
 6. **Smoke test:** `mcp-smoke-tester` in the **foreground** (background subagents may not get MCP tools). After a rebuild, the lead may need `/mcp` to reconnect the server.
-7. **Close out (lead only):** update the status table and decisions log in `poc/implementation-plan.md`, commit `C<N>: …`, and list what Andy must check by hand.
+7. **Close out (lead only):** update the status table and decisions log in `poc/implementation-plan.md`, commit `C<N>: …` on the chunk branch, push it, and open a PR. Post the `spec-reviewer` findings (and how each was resolved) as a PR comment, so the review reasoning survives outside the chat. Then list what Andy must check by hand. **Andy approves and merges** — see [Branches, PRs and CI](#branches-prs-and-ci).
+
+## Branches, PRs and CI
+
+Each chunk from C1 onward is a branch (`c<N>-<slug>`, e.g. `c1-campaigns`) merged through a PR, not a direct push to `master`. This lines up with the worktrees the parallel waves already need.
+
+**GitHub Actions** (`.github/workflows/ci.yml`) runs `dotnet build` and `dotnet test` on every PR, on **Windows**, in **both Debug and Release**. Both configurations matter: Release compiles out the `#if DEBUG` tools, so a Debug-only test file loses its coverage there silently — which is exactly what the C0 review caught. `Category=Network` tests are excluded, per `CLAUDE.md`.
+
+CI is the gate that matters, because it is the one check an agent cannot satisfy by asserting it. "Tests pass" in a subagent's report is a *claim*; a green check is evidence. The lead still re-runs the suite locally before opening the PR.
+
+**Only Andy approves and merges.** This is a constraint, not a preference:
+
+- Every agent in this project runs under Andy's git and GitHub credentials, so a PR opened by the lead is authored by Andy's account.
+- **GitHub refuses self-approval**, so a "reviewing subagent" literally cannot approve these PRs — and if it could, the approval would be Andy approving Andy, an audit trail that invites trust it hasn't earned.
+- Therefore, when configuring branch protection on `master`, **require the CI status check but do not require approving reviews.** Requiring an approval would deadlock the repo: the only account that can approve is the author.
+
+`spec-reviewer` remains the substantive review, and it still runs **pre-commit** against the working tree, so blockers never reach history. The PR is the durable record of that review, not a second gate.
 
 Small chunks (C0, C1) can skip the separate test-engineer/implementer split: one implementer writes the tests and code, then the review runs as usual.
 
@@ -123,6 +139,8 @@ run tests, then merge C3, run tests, smoke-test both, update the status table an
 ```
 
 ## Housekeeping
-- `.gitignore` (C0) should include `spikes/`, `.dev-workspace/`, `.dev-data/`, `.claude/settings.local.json`, `.claude/agent-memory-local/`, `dist/`, `*.db`.
+- `.gitignore` (C0) should include `spikes/`, `.dev-workspace/`, `.dev-data/`, `.claude/settings.local.json`, `.claude/agent-memory-local/`, `dist/`, `*.db`. Anchor the data and output patterns to the repo root (`/dist/`, `/refdata/`, `/overture/`…): unanchored, `overture/` also matches `src/ProspectStudio.Infrastructure/Overture/`, and `core.ignoreCase` on Windows makes the match case-blind.
+- `.github/workflows/ci.yml` runs the tests on every PR. Keep it in step with the solution when projects are added.
+- The lead needs the **GitHub CLI** (`gh`) installed and authenticated to open PRs.
 - `.claude/agents/` and `.claude/settings.json` are committed so they stay the same across machines.
 - If an agent keeps making the same mistake, fix its `.md` instructions (or `CLAUDE.md`) rather than repeating the correction in chat.

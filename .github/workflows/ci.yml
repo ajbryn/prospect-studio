@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  test:
+    # Windows because the POC targets Windows only: PsOptions defaults resolve
+    # %LOCALAPPDATA% and Documents, and the server ships as a win-x64 exe.
+    runs-on: windows-latest
+
+    # Both configurations on purpose. Release compiles out the #if DEBUG tools,
+    # so a Debug-only test file silently loses its coverage there - which is
+    # exactly what the C0 review caught in ErrorContractTests.
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Debug, Release]
+
+    name: test (${{ matrix.configuration }})
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Restore
+        run: dotnet restore src/ProspectStudio.sln
+
+      - name: Build
+        run: dotnet build src/ProspectStudio.sln --no-restore -c ${{ matrix.configuration }}
+
+      # Category=Network tests hit live APIs and are opt-in per CLAUDE.md.
+      - name: Test
+        run: dotnet test src/ProspectStudio.sln --no-build -c ${{ matrix.configuration }} --filter "Category!=Network"
