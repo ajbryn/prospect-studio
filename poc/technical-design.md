@@ -187,6 +187,7 @@ Documents\Prospect Studio\
 - **Reads for tools:** `AsNoTracking()` and projection to compact DTOs (`Select(...)`) for `list_leads`, `get_campaign` and similar, so tool responses stay small and fast.
 - **Concurrency:** single user, so there's no optimistic concurrency token in the POC. Background jobs and tool calls can overlap; WAL mode plus short transactions keeps SQLite locking manageable. Retry once on `SQLITE_BUSY`.
 - **Dates:** store `DateTimeOffset` as UTC ISO-8601 text (the SQLite provider's default converter) so values sort correctly and stay readable.
+- **Portability:** SQLite is the target for 1 user or several users with separate data. If 2–5 users later need **shared** campaigns and leads, move to a database server (Azure SQL/SQL Server preferred, PostgreSQL acceptable) by swapping the EF provider, creating a new baseline migration and running a one-off data copy. Don't put the SQLite file on a network share or OneDrive. The provider-neutral rules in `CLAUDE.md` keep this move cheap. Overture/Census reference data stays in local DuckDB/Parquet either way.
 
 ## 6. Reference data & Overture
 
