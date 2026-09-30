@@ -15,6 +15,7 @@ public static class ToolResults
     {
         WriteIndented = false,
         DefaultIgnoreCondition = JsonIgnoreCondition.Never,
+        Converters = { new UtcTimestampConverter(), new NullableUtcTimestampConverter() },
     };
 
     public static CallToolResult Ok<T>(T payload) =>
@@ -23,7 +24,8 @@ public static class ToolResults
     public static CallToolResult Error(McpToolException exception)
     {
         ArgumentNullException.ThrowIfNull(exception);
-        var envelope = new ToolErrorEnvelope(new ToolError(exception.Code, exception.Message, exception.Hint));
+        var details = exception.Details is { Count: > 0 } reported ? reported : null;
+        var envelope = new ToolErrorEnvelope(new ToolError(exception.Code, exception.Message, exception.Hint, details));
         return Text(JsonSerializer.Serialize(envelope, Json), isError: true);
     }
 
@@ -39,4 +41,14 @@ public sealed record ToolErrorEnvelope([property: JsonPropertyName("error")] Too
 public sealed record ToolError(
     [property: JsonPropertyName("code")] string Code,
     [property: JsonPropertyName("message")] string Message,
-    [property: JsonPropertyName("hint")] string? Hint);
+    [property: JsonPropertyName("hint")] string? Hint,
+    [property: JsonPropertyName("details"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    IReadOnlyList<ToolErrorDetail>? Details = null);
+
+/// <summary>
+/// One problem inside a <c>VALIDATION_FAILED</c>: an RFC 6901 pointer into the document the caller
+/// submitted, and what is wrong at that spot (mcp-tools.md §save_search_profile).
+/// </summary>
+public sealed record ToolErrorDetail(
+    [property: JsonPropertyName("pointer")] string Pointer,
+    [property: JsonPropertyName("message")] string Message);

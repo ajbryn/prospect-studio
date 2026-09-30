@@ -33,6 +33,7 @@ Conventions:
 | Workbook | `export_leads_workbook`, `import_leads_workbook` | Spreadsheet round-trip (.xlsx/.csv; Google Sheets compatible) | C8 |
 | Workbook | `connect_google`, `publish_leads_sheet`, `pull_leads_sheet` | Native Google Sheets (optional) | C8b |
 | Postcards | `get_brand_kit`, `list_layouts`, `render_postcard_preview` | Design loop | C10 |
+| Postcards | `fetch_street_image` | Street View / Mapillary site photo, screen-only reference | C10 |
 | Production | `save_template`, `list_templates`, `get_template`, `set_lead_overrides` | Templates and per-lead tweaks | C11 |
 | Production | `assign_tracking_codes`, `render_campaign`, `build_dealer_packets`, `export_mailing_manifest` | Batch outputs | C11 |
 | Measure | `assign_cohorts`, `run_matchback` | Measurement groundwork | C13 |
@@ -69,13 +70,55 @@ Steps: NAICS check → counties → CBSA → ZCTA → Overture extract per state
 Input: `{ "name": "Houston Scissor & Boom Lifts Q4", "product": "Scissor & boom lifts", "notes": "" }`
 Output: `{ "campaignId": "cmp_7Q3KXM", "folder": "...\\Campaigns\\2026-10 Houston Scissor & Boom Lifts Q4" }`
 
-### `list_campaigns` / `get_campaign`
-`get_campaign { campaignId }` returns name, folder, profile summary, geo label, and counts by status/tier/dealer, plus the last export and render times.
+`campaignId` is `cmp_` plus 6 characters from the same unambiguous alphabet as tracking codes (`23456789ABCDEFGHJKLMNPQRSTUVWXYZ`). The folder is `yyyy-MM <Name>` under `Campaigns\`, with characters Windows forbids removed. Duplicate detection is on the normalized slug and is **case-insensitive**, so "Houston Test" and "houston test" collide → `CONFLICT`.
+
+### `list_campaigns`
+Input: `{ "limit": 100, "offset": 0 }` (both optional)
+Output:
+```json
+{ "total": 3, "campaigns": [
+  { "campaignId": "cmp_7Q3KXM", "name": "Houston Scissor & Boom Lifts Q4", "folder": "...",
+    "status": "draft", "product": "Scissor & boom lifts", "createdAt": "2026-09-30T14:02:11Z", "leads": 0 } ] }
+```
+
+### `get_campaign`
+Input: `{ "campaignId": "..." }`
+Output:
+```json
+{ "campaignId": "cmp_7Q3KXM", "name": "Houston Scissor & Boom Lifts Q4", "folder": "...",
+  "status": "draft", "product": "Scissor & boom lifts",
+  "profile": { "name": "…", "segments": 4, "geographyQuery": "Houston metro", "savedAt": "…" },
+  "geoLabel": null,
+  "counts": { "byStatus": {}, "byTier": {}, "byDealer": [] },
+  "lastExportAt": null, "lastRenderAt": null }
+```
+`profile` is `null` until `save_search_profile` runs. **`geoLabel` stays `null` in C1** — resolving a query like "Houston metro" to "Houston-Pasadena-The Woodlands, TX" needs `resolve_geography`, which arrives in C2; until then the raw query is available under `profile.geographyQuery`. Counts are empty objects/arrays for a new campaign, not absent. Errors: `NOT_FOUND`.
 
 ### `save_search_profile`
 Input: `{ "campaignId": "...", "profile": { /* schemas/search-profile.schema.json */ } }`
 Output: `{ "saved": true, "path": ".../search-profile.json", "warnings": ["Segment 'Facilities' has no overtureCategories; keywords only"] }`
-Errors: `VALIDATION_FAILED` with `details[]` (JSON pointer + message).
+Errors: `VALIDATION_FAILED`, with `details[]` **inside the error object**, each entry `{ "pointer": "<RFC 6901 JSON pointer>", "message": "…" }`:
+
+```json
+{ "error": { "code": "VALIDATION_FAILED", "message": "The search profile is not valid.",
+  "hint": "Fix the 2 problems listed in details and call save_search_profile again.",
+  "details": [ { "pointer": "/segments/0/naics/0", "message": "'23A' is not a valid NAICS code." } ] } }
+```
+
+`details` is omitted entirely when there is nothing to report, so the envelope stays `{code, message, hint}` for every other error. A rejected save must leave any previously stored profile untouched.
+
+**Only `pointer` is contractual; `message` is advisory** — message wording may change freely and must not be asserted on or parsed. Pointer rules:
+
+| Case | Pointer | Note |
+|---|---|---|
+| Missing required property | the property itself (`/segments`) | Synthesize it: JSON Schema evaluation natively reports the *parent*, which is useless to the caller |
+| Failed `anyOf` / `oneOf` alternatives | **one** detail at the parent (`/geography`) | Never one per branch. Two details each saying "required" reads as two requirements, and the caller would satisfy both when the schema wants exactly one |
+| `scoringWeights` not summing to 1.0 ± 0.001 | `/scoringWeights` | A **code-level** rule, not in the schema, which only requires the six keys exist |
+| Anything else | the offending value's own location | e.g. `/segments/0/naics/0` |
+
+No detail may point at a value that is actually valid.
+
+Also returns `FILE_LOCKED` when `search-profile.json` is held open by another application, with the hint naming the path. Detected by probing whether the existing file can be opened exclusively, not by inspecting platform error codes — a write that failed for any other reason (disk full, permissions) stays `INTERNAL`. A locked file leaves the previously stored profile intact, `savedAt` included.
 
 ## Lookups
 
@@ -194,6 +237,22 @@ Output: brand name, colors, fonts (found/missing), logo, products `[ { id, name,
 ### `list_layouts`
 Input: `{ "side": "front" }` → `{ "layouts": [ { "id": "hero-bold-left", "side": "front", "description": "...", "slots": [ { "id": "headline", "type": "text", "maxChars": 60 } ] } ] }`
 
+### `fetch_street_image`
+Fetches a street-level photo of a lead's site as **on-screen reference only**, so the user can see the building and judge whether to commission a real photograph.
+
+Input: `{ "campaignId": "...", "leadId": "L0001", "provider": "streetview" | "mapillary" | null, "heading": null }`
+Output: **image content** (the photo) plus text JSON:
+```json
+{ "provider": "google-streetview", "saved": ".../reference/L0001_streetview.jpg",
+  "sidecar": ".../reference/L0001_streetview.jpg.asset.json",
+  "attribution": "© Google", "allowedUses": ["screen"],
+  "coordinates": { "lat": 29.7604, "lon": -95.3698, "heading": 210 },
+  "warnings": ["Reference only: this image cannot be rendered onto print or email output."] }
+```
+`provider` defaults to `PS_IMAGERY_PROVIDER` (default `streetview`), falling back to the other configured provider when the preferred one has no coverage. Errors: `NOT_READY` (no provider key configured), `NOT_FOUND` (unknown lead, or no imagery within range from either provider), `UNSUPPORTED` (`PS_IMAGERY_PROVIDER=none`), `EXTERNAL_API`, `RATE_LIMITED`.
+
+The saved sidecar always carries `allowedUses: ["screen"]`, so [§10.5](technical-design.md#105-qa-checks-run-in-the-page-via-js-returned-as-qafinding)'s `asset-license` check blocks it from print and email. See [§10.6](technical-design.md#106-street-level-reference-imagery-istreetimageryprovider).
+
 ### `render_postcard_preview`
 Input: `{ "campaignId": "...", "spec": { /* schemas/postcard-spec.schema.json */ }, "leadId": "L0001", "sides": ["front","back"], "width": 1200 }`
 Output: **image content** (one PNG per side) plus text JSON:
@@ -256,5 +315,7 @@ Every tool error uses this envelope, so a skill can always branch on `code`:
 ```json
 { "error": { "code": "NOT_READY", "message": "…", "hint": "…" } }
 ```
+
+`VALIDATION_FAILED` adds `details[]` **inside** `error` (see [`save_search_profile`](#save_search_profile)). The field is omitted when empty, so every other error keeps exactly the three keys above.
 
 `INTERNAL` messages are deliberately generic: the exception text, stack and file paths go to the log only, never to the client.

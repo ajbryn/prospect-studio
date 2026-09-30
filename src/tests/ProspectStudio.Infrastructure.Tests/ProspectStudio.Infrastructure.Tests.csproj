@@ -22,4 +22,25 @@
     <ProjectReference Include="..\..\ProspectStudio.Infrastructure\ProspectStudio.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Shared\RepoFixtures.cs" Link="Infrastructure\RepoFixtures.cs" />
+  </ItemGroup>
+
+  <!-- The spec pack's fixtures and schemas travel with the test assembly (technical-design §3). -->
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)..\..\..\poc\fixtures\**\*"
+             LinkBase="poc\fixtures"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)..\..\..\poc\schemas\**\*"
+             LinkBase="poc\schemas"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- The migration-drift guard is cross-checked from ProspectStudio.Mcp.Tests, which needs to find
+       this project's source; keep the same metadata key the C0 source-rule tests use. -->
+  <ItemGroup>
+    <AssemblyMetadata Include="ProspectStudioSourceRoot"
+                      Value="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..'))" />
+  </ItemGroup>
+
 </Project>

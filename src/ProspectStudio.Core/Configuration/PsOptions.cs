@@ -16,6 +16,12 @@ public sealed record PsOptions
 
     public int? CbpYear { get; init; }
 
+    /// <summary>
+    /// Dev convenience from implementation-plan C1 (<c>PS_SEED_FIXTURES=1</c>): copy the fixture brand
+    /// kit into an empty <c>Brand Kit</c> folder at startup.
+    /// </summary>
+    public bool SeedFixtures { get; init; }
+
     public required ApiKeys Keys { get; init; }
 
     public string LogsDirectory => Path.Combine(Data, "logs");

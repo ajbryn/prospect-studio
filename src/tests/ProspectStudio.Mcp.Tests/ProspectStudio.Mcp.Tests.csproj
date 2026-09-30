@@ -22,6 +22,20 @@
     <ProjectReference Include="..\..\ProspectStudio.Mcp\ProspectStudio.Mcp.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Shared\RepoFixtures.cs" Link="Infrastructure\RepoFixtures.cs" />
+  </ItemGroup>
+
+  <!-- The spec pack's fixtures and schemas travel with the test assembly (technical-design §3). -->
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)..\..\..\poc\fixtures\**\*"
+             LinkBase="poc\fixtures"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)..\..\..\poc\schemas\**\*"
+             LinkBase="poc\schemas"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <!-- The contract tests launch the server as a child process, so they need the path of the
        ProspectStudio.Mcp build output (with its runtimeconfig.json), not the copy in this project's bin. -->
   <ItemGroup>

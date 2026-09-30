@@ -5,4 +5,15 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="JsonSchema.Net" Version="9.4.0" />
+  </ItemGroup>
+
+  <!-- The search-profile schema travels inside the assembly, so validation works from a published
+       server with no spec pack next to it (implementation-plan C1). -->
+  <ItemGroup>
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)..\..\poc\schemas\search-profile.schema.json"
+                      LogicalName="ProspectStudio.Core.Schemas.search-profile.schema.json" />
+  </ItemGroup>
+
 </Project>
