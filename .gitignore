@@ -1,0 +1,50 @@
+# Build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+*.user
+*.suo
+*.userprefs
+.vs/
+.vscode/
+.idea/
+artifacts/
+
+# Publish output
+/dist/
+
+# Local databases
+*.db
+*.db-shm
+*.db-wal
+
+# Secrets and local config
+.env*
+.claude/settings.local.json
+.claude/agent-memory-local/
+
+# Generated / downloaded data (never committed).
+# Anchored to the repo root: the real data lives under PROSPECT_STUDIO_DATA, outside the
+# repo, and an unanchored name here would shadow source folders such as
+# src/ProspectStudio.Infrastructure/Overture/ (core.ignoreCase makes the match case-blind).
+/refdata/
+/overture/
+
+# Dev workspaces and scratch
+/spikes/
+/.dev-workspace/
+/.dev-data/
+
+# Playwright browsers
+.playwright/
+
+# Logs
+*.log
+/logs/
+
+# OS
+Thumbs.db
+.DS_Store

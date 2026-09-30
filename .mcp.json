@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "prospect-studio": {
+      "command": "dotnet",
+      "args": ["src/ProspectStudio.Mcp/bin/Debug/net10.0/ProspectStudio.Mcp.dll"],
+      "env": { "PROSPECT_STUDIO_HOME": "./.dev-workspace", "PROSPECT_STUDIO_DATA": "./.dev-data" }
+    }
+  }
+}

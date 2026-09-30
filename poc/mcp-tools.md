@@ -249,3 +249,12 @@ Output: `{ "matches": { "exact": 1, "strong": 2, "fuzzy": 3 }, "byCohort": [ { "
 | `LICENSE_BLOCKED` | Asset lacks print rights | "Replace products/foo.png or add print rights to its .asset.json." |
 | `JOB_RUNNING` | Conflicting job already running for the campaign | "Wait for job_ab12cd." |
 | `UNSUPPORTED` | Feature not built yet (stretch) | "Available after chunk S3." |
+| `INTERNAL` | An unexpected failure inside the server (any exception that isn't one of the above) | "Something went wrong; check the log in `%LOCALAPPDATA%\ProspectStudio\logs`." |
+
+Every tool error uses this envelope, so a skill can always branch on `code`:
+
+```json
+{ "error": { "code": "NOT_READY", "message": "…", "hint": "…" } }
+```
+
+`INTERNAL` messages are deliberately generic: the exception text, stack and file paths go to the log only, never to the client.

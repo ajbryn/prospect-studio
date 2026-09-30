@@ -95,7 +95,10 @@ src/
 │  ├─ Excel/                          # ClosedXML workbook export/import, dealer XLSX
 │  ├─ Rendering/                      # Fluid (Liquid) templates, SceneBuilder (SVG), QrService, PlaywrightRenderer, Layouts/*
 │  ├─ Jobs/                           # Channel-based JobRunner persisted in SQLite
-│  └─ Config/                         # PsOptions (env vars → options)
+│  └─ Config/                         # EnvironmentOptions: reads the real process environment,
+│                                     # resolves absolute paths, creates the data directories.
+│                                     # The PsOptions record and its pure binder live in Core
+│                                     # (Core/Configuration) so Core stays I/O-free — see C0 decisions
 ├─ ProspectStudio.Mcp/
 │  ├─ Program.cs                      # host, DI, stdio transport, CLI verbs (setup, doctor)
 │  ├─ Tools/                          # one class per tool group: SetupTools, CampaignTools, GeoTools, CandidateTools, LeadTools, WorkbookTools, PostcardTools, ProductionTools, MeasureTools
