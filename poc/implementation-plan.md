@@ -59,8 +59,9 @@ flowchart LR
 - Serilog to file + **stderr**. `Program.cs` with MCP stdio host and `WithToolsFromAssembly()`. When CLI arguments are present (`doctor`, later `setup`), run the verb instead of the server.
 - Tool `get_status` (version, paths, keys configured as booleans; readiness fields present but `false` for now).
 - `McpToolException` and the error mapping ([mcp-tools §Errors](mcp-tools.md#errors)).
-- Debug-only tool `debug_sleep { seconds }` to measure client timeouts (V2). Excluded from Release builds.
+- Debug-only tool `debug_sleep { seconds }` to measure client timeouts (V2), in its own `Mcp/Tools/DebugTools.cs` with the **whole file wrapped in `#if DEBUG`**, so it cannot reach a Release build.
 - Root `.mcp.json` for Claude Code ([technical-design §2](technical-design.md#2-runtime-topology)).
+- `tools/publish-mcp.ps1`: publishes **Release, win-x64, self-contained** to `dist/mcp`, then prints the ready-to-paste `claude_desktop_config.json` snippet (absolute exe path plus the `PROSPECT_STUDIO_HOME`, `PS_TRACKING_BASE_URL` and `CENSUS_API_KEY` env block from [technical-design §2](technical-design.md#2-runtime-topology)). Andy registers the server in Claude Desktop himself; the script never edits the Desktop config.
 
 **Verify & record:** V1 (SDK API names), V2 (timeout observed in Claude Desktop), V3 (Claude Desktop sees the published exe).
 
@@ -69,7 +70,7 @@ flowchart LR
 - A test that nothing is written to stdout except protocol messages (start the server, send `initialize`, assert every stdout line parses as JSON-RPC).
 - `Core.Tests`: `PsOptions` defaults and env overrides.
 
-**Manual check:** MCP Inspector lists and calls `get_status`; in Claude Code, `/mcp` shows `prospect-studio` connected; `dotnet publish` exe registered in Claude Desktop answers "What's the Prospect Studio status?".
+**Manual check:** MCP Inspector lists and calls `get_status`; in Claude Code, `/mcp` shows `prospect-studio` connected; run `pwsh tools/publish-mcp.ps1`, paste the printed snippet into `claude_desktop_config.json`, and confirm Claude Desktop answers "What's the Prospect Studio status?".
 
 ---
 
