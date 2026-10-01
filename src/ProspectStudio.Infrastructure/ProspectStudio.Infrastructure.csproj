@@ -6,11 +6,20 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.105.1" />
+    <PackageReference Include="DuckDB.NET.Data.Full" Version="1.5.6" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.12" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ProspectStudio.Core\ProspectStudio.Core.csproj" />
+  </ItemGroup>
+
+  <!-- The NAICS 2022 table travels inside the assembly, so lookup_naics answers on a first run before
+       prepare_data has downloaded anything (implementation-plan C2). -->
+  <ItemGroup>
+    <EmbeddedResource Include="Reference\naics2022.csv"
+                      LogicalName="ProspectStudio.Infrastructure.Reference.naics2022.csv" />
   </ItemGroup>
 
 </Project>

@@ -86,6 +86,70 @@ namespace ProspectStudio.Infrastructure.Storage.Migrations
 
                     b.ToTable("campaigns", (string)null);
                 });
+
+            modelBuilder.Entity("ProspectStudio.Core.Domain.Job", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CampaignId")
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("campaign_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime?>("FinishedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("finished_at");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("kind");
+
+                    b.Property<string>("Message")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("message");
+
+                    b.Property<string>("ParametersJson")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("params_json");
+
+                    b.Property<double>("Progress")
+                        .HasColumnType("REAL")
+                        .HasColumnName("progress");
+
+                    b.Property<string>("ResultJson")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("result_json");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("started_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("ix_jobs_created_at");
+
+                    b.HasIndex("CampaignId", "Status")
+                        .HasDatabaseName("ix_jobs_campaign_status");
+
+                    b.ToTable("jobs", (string)null);
+                });
 #pragma warning restore 612, 618
         }
     }

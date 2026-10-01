@@ -11,6 +11,8 @@ public sealed class ProspectDbContext(DbContextOptions<ProspectDbContext> option
 {
     public DbSet<Campaign> Campaigns => Set<Campaign>();
 
+    public DbSet<Job> Jobs => Set<Job>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);

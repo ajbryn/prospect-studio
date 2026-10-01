@@ -110,7 +110,7 @@ internal static class ToolCall
 
         var registration = names.Contains(tool)
             ? string.Empty
-            : $"{Environment.NewLine}tools/list does not advertise '{tool}' at all (mcp-tools.md lists it for chunk C1). "
+            : $"{Environment.NewLine}tools/list does not advertise '{tool}' at all, although mcp-tools.md §Summary lists it. "
               + $"It advertises: {string.Join(", ", names)}";
 
         throw new Xunit.Sdk.XunitException($"{message}{registration}{Diagnostics(diagnostics)}");

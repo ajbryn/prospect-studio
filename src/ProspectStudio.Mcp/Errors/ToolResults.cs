@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using ModelContextProtocol.Protocol;
+using ProspectStudio.Core.Json;
 
 namespace ProspectStudio.Mcp.Errors;
 
@@ -11,12 +12,11 @@ namespace ProspectStudio.Mcp.Errors;
 /// </summary>
 public static class ToolResults
 {
-    public static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web)
-    {
-        WriteIndented = false,
-        DefaultIgnoreCondition = JsonIgnoreCondition.Never,
-        Converters = { new UtcTimestampConverter(), new NullableUtcTimestampConverter() },
-    };
+    /// <summary>
+    /// The shared configuration from <see cref="ProspectStudioJson"/>, so a job's stored
+    /// <c>result_json</c> and a tool response format timestamps identically.
+    /// </summary>
+    public static readonly JsonSerializerOptions Json = ProspectStudioJson.Options;
 
     public static CallToolResult Ok<T>(T payload) =>
         Text(JsonSerializer.Serialize(payload, Json), isError: false);

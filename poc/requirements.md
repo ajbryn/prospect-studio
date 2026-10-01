@@ -129,7 +129,7 @@ Run in **Cowork** with the plugin installed and the MCP server registered, using
 |---|---|---|
 | 1 | "Set up Prospect Studio for Texas." | Status OK; reference data present; TX extract present; fixtures imported (3 dealers, territories, suppression). |
 | 2 | "New campaign: Houston scissor & boom lifts, Q4." + the brief from [03 §2](../docs/03-Lead-Search-Strategy.md#2-step-1-search-profile-icp) | Claude proposes a profile (segments, NAICS, Overture categories, keywords, exclusions) and asks to confirm; `search-profile.json` saved. |
-| 3 | "How big is this market?" | Establishment counts for the Houston CBSA (9 counties) by segment, with size classes. |
+| 3 | "How big is this market?" | Establishment counts for the Houston CBSA (10 counties) by segment, with size classes. |
 | 4 | "Find the candidates." | ≥ 300 candidates; duplicates merged; suppressed entries removed with counts by reason; every lead has a dealer or a coverage-gap flag. |
 | 5 | "Enrich and score them." | Website job completes; scores and tiers assigned; the top 50 are listed compactly. |
 | 6 | "Research the top 25." | Claude researches with web search; each of the 25 has saved research with ≥ 1 cited source, or an explicit "no signal found". |
