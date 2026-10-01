@@ -1,6 +1,6 @@
 {
   "name": "prospect-studio-lite",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Find and research B2B equipment prospects in a territory, route them to local dealers, and produce personalized, trackable 6x9 postcards, using Claude's own web research plus a small bundled postcard renderer.",
   "author": { "name": "Andy" },
   "keywords": ["lead generation", "direct mail", "postcards", "dealers", "sales"]

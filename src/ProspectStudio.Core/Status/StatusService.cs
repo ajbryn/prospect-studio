@@ -1,8 +1,14 @@
 using ProspectStudio.Core.Configuration;
+using ProspectStudio.Core.Reference;
 
 namespace ProspectStudio.Core.Status;
 
-public sealed class StatusService(PsOptions options)
+/// <param name="referenceData">
+/// Looks at <c>refdata\</c> so <c>ready.referenceData</c> is a fact rather than a placeholder. Optional:
+/// without it the report says reference data is not ready, which is the honest answer when nothing is
+/// there to ask.
+/// </param>
+public sealed class StatusService(PsOptions options, IReferenceDataInventory? referenceData = null)
 {
     public StatusReport GetStatus()
     {
@@ -22,7 +28,7 @@ public sealed class StatusService(PsOptions options)
             Home: options.Home,
             Data: options.Data,
             Ready: new ReadinessReport(
-                ReferenceData: false,
+                ReferenceData: referenceData?.IsComplete ?? false,
                 Overture: new OvertureReadiness(Release: null, States: []),
                 BrandKit: false,
                 Dealers: 0,

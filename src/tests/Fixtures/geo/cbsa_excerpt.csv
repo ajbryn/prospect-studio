@@ -1,0 +1,143 @@
+cbsa_code,cbsa_title,area_type,county_geoid,county_name,state_name,central_outlying
+10180,"Abilene, TX",Metropolitan Statistical Area,48059,Callahan County,Texas,Outlying
+10180,"Abilene, TX",Metropolitan Statistical Area,48253,Jones County,Texas,Outlying
+10180,"Abilene, TX",Metropolitan Statistical Area,48441,Taylor County,Texas,Central
+10860,"Alice, TX",Micropolitan Statistical Area,48047,Brooks County,Texas,Outlying
+10860,"Alice, TX",Micropolitan Statistical Area,48249,Jim Wells County,Texas,Central
+11100,"Amarillo, TX",Metropolitan Statistical Area,48011,Armstrong County,Texas,Outlying
+11100,"Amarillo, TX",Metropolitan Statistical Area,48065,Carson County,Texas,Outlying
+11100,"Amarillo, TX",Metropolitan Statistical Area,48359,Oldham County,Texas,Outlying
+11100,"Amarillo, TX",Metropolitan Statistical Area,48375,Potter County,Texas,Central
+11100,"Amarillo, TX",Metropolitan Statistical Area,48381,Randall County,Texas,Central
+11380,"Andrews, TX",Micropolitan Statistical Area,48003,Andrews County,Texas,Central
+11980,"Athens, TX",Micropolitan Statistical Area,48213,Henderson County,Texas,Central
+12420,"Austin-Round Rock-San Marcos, TX",Metropolitan Statistical Area,48021,Bastrop County,Texas,Outlying
+12420,"Austin-Round Rock-San Marcos, TX",Metropolitan Statistical Area,48055,Caldwell County,Texas,Outlying
+12420,"Austin-Round Rock-San Marcos, TX",Metropolitan Statistical Area,48209,Hays County,Texas,Central
+12420,"Austin-Round Rock-San Marcos, TX",Metropolitan Statistical Area,48453,Travis County,Texas,Central
+12420,"Austin-Round Rock-San Marcos, TX",Metropolitan Statistical Area,48491,Williamson County,Texas,Central
+13060,"Bay City, TX",Micropolitan Statistical Area,48321,Matagorda County,Texas,Central
+13140,"Beaumont-Port Arthur, TX",Metropolitan Statistical Area,48199,Hardin County,Texas,Outlying
+13140,"Beaumont-Port Arthur, TX",Metropolitan Statistical Area,48245,Jefferson County,Texas,Central
+13140,"Beaumont-Port Arthur, TX",Metropolitan Statistical Area,48361,Orange County,Texas,Outlying
+13300,"Beeville, TX",Micropolitan Statistical Area,48025,Bee County,Texas,Central
+13700,"Big Spring, TX",Micropolitan Statistical Area,48227,Howard County,Texas,Central
+14300,"Bonham, TX",Micropolitan Statistical Area,48147,Fannin County,Texas,Central
+14420,"Borger, TX",Micropolitan Statistical Area,48233,Hutchinson County,Texas,Central
+14780,"Brenham, TX",Micropolitan Statistical Area,48477,Washington County,Texas,Central
+15180,"Brownsville-Harlingen, TX",Metropolitan Statistical Area,48061,Cameron County,Texas,Central
+15220,"Brownwood, TX",Micropolitan Statistical Area,48049,Brown County,Texas,Central
+17780,"College Station-Bryan, TX",Metropolitan Statistical Area,48041,Brazos County,Texas,Central
+17780,"College Station-Bryan, TX",Metropolitan Statistical Area,48051,Burleson County,Texas,Outlying
+17780,"College Station-Bryan, TX",Metropolitan Statistical Area,48395,Robertson County,Texas,Outlying
+18580,"Corpus Christi, TX",Metropolitan Statistical Area,48007,Aransas County,Texas,Outlying
+18580,"Corpus Christi, TX",Metropolitan Statistical Area,48355,Nueces County,Texas,Central
+18580,"Corpus Christi, TX",Metropolitan Statistical Area,48409,San Patricio County,Texas,Central
+18620,"Corsicana, TX",Micropolitan Statistical Area,48349,Navarro County,Texas,Central
+19100,"Dallas-Fort Worth-Arlington, TX",Metropolitan Statistical Area,48085,Collin County,Texas,Central
+19100,"Dallas-Fort Worth-Arlington, TX",Metropolitan Statistical Area,48113,Dallas County,Texas,Central
+19100,"Dallas-Fort Worth-Arlington, TX",Metropolitan Statistical Area,48121,Denton County,Texas,Outlying
+19100,"Dallas-Fort Worth-Arlington, TX",Metropolitan Statistical Area,48139,Ellis County,Texas,Central
+19100,"Dallas-Fort Worth-Arlington, TX",Metropolitan Statistical Area,48231,Hunt County,Texas,Outlying
+19100,"Dallas-Fort Worth-Arlington, TX",Metropolitan Statistical Area,48251,Johnson County,Texas,Central
+19100,"Dallas-Fort Worth-Arlington, TX",Metropolitan Statistical Area,48257,Kaufman County,Texas,Outlying
+19100,"Dallas-Fort Worth-Arlington, TX",Metropolitan Statistical Area,48367,Parker County,Texas,Outlying
+19100,"Dallas-Fort Worth-Arlington, TX",Metropolitan Statistical Area,48397,Rockwall County,Texas,Central
+19100,"Dallas-Fort Worth-Arlington, TX",Metropolitan Statistical Area,48439,Tarrant County,Texas,Central
+19100,"Dallas-Fort Worth-Arlington, TX",Metropolitan Statistical Area,48497,Wise County,Texas,Outlying
+19620,"Del Rio, TX",Micropolitan Statistical Area,48465,Val Verde County,Texas,Central
+20300,"Dumas, TX",Micropolitan Statistical Area,48341,Moore County,Texas,Central
+20580,"Eagle Pass, TX",Metropolitan Statistical Area,48323,Maverick County,Texas,Central
+20900,"El Campo, TX",Micropolitan Statistical Area,48481,Wharton County,Texas,Central
+21340,"El Paso, TX",Metropolitan Statistical Area,48141,El Paso County,Texas,Central
+21340,"El Paso, TX",Metropolitan Statistical Area,48229,Hudspeth County,Texas,Outlying
+23240,"Fredericksburg, TX",Micropolitan Statistical Area,48171,Gillespie County,Texas,Central
+23620,"Gainesville, TX",Micropolitan Statistical Area,48097,Cooke County,Texas,Central
+24180,"Granbury, TX",Micropolitan Statistical Area,48221,Hood County,Texas,Central
+25820,"Hereford, TX",Micropolitan Statistical Area,48117,Deaf Smith County,Texas,Central
+26420,"Houston-Pasadena-The Woodlands, TX",Metropolitan Statistical Area,48015,Austin County,Texas,Outlying
+26420,"Houston-Pasadena-The Woodlands, TX",Metropolitan Statistical Area,48039,Brazoria County,Texas,Central
+26420,"Houston-Pasadena-The Woodlands, TX",Metropolitan Statistical Area,48071,Chambers County,Texas,Outlying
+26420,"Houston-Pasadena-The Woodlands, TX",Metropolitan Statistical Area,48157,Fort Bend County,Texas,Central
+26420,"Houston-Pasadena-The Woodlands, TX",Metropolitan Statistical Area,48167,Galveston County,Texas,Outlying
+26420,"Houston-Pasadena-The Woodlands, TX",Metropolitan Statistical Area,48201,Harris County,Texas,Central
+26420,"Houston-Pasadena-The Woodlands, TX",Metropolitan Statistical Area,48291,Liberty County,Texas,Outlying
+26420,"Houston-Pasadena-The Woodlands, TX",Metropolitan Statistical Area,48339,Montgomery County,Texas,Outlying
+26420,"Houston-Pasadena-The Woodlands, TX",Metropolitan Statistical Area,48407,San Jacinto County,Texas,Outlying
+26420,"Houston-Pasadena-The Woodlands, TX",Metropolitan Statistical Area,48473,Waller County,Texas,Central
+26660,"Huntsville, TX",Micropolitan Statistical Area,48471,Walker County,Texas,Central
+27380,"Jacksonville, TX",Micropolitan Statistical Area,48073,Cherokee County,Texas,Central
+28500,"Kerrville, TX",Micropolitan Statistical Area,48265,Kerr County,Texas,Central
+28660,"Killeen-Temple, TX",Metropolitan Statistical Area,48027,Bell County,Texas,Central
+28660,"Killeen-Temple, TX",Metropolitan Statistical Area,48099,Coryell County,Texas,Central
+28660,"Killeen-Temple, TX",Metropolitan Statistical Area,48281,Lampasas County,Texas,Outlying
+28780,"Kingsville, TX",Micropolitan Statistical Area,48273,Kleberg County,Texas,Central
+29700,"Laredo, TX",Metropolitan Statistical Area,48479,Webb County,Texas,Central
+30980,"Longview, TX",Metropolitan Statistical Area,48183,Gregg County,Texas,Central
+30980,"Longview, TX",Metropolitan Statistical Area,48203,Harrison County,Texas,Outlying
+30980,"Longview, TX",Metropolitan Statistical Area,48401,Rusk County,Texas,Outlying
+30980,"Longview, TX",Metropolitan Statistical Area,48459,Upshur County,Texas,Outlying
+31180,"Lubbock, TX",Metropolitan Statistical Area,48079,Cochran County,Texas,Outlying
+31180,"Lubbock, TX",Metropolitan Statistical Area,48107,Crosby County,Texas,Outlying
+31180,"Lubbock, TX",Metropolitan Statistical Area,48169,Garza County,Texas,Outlying
+31180,"Lubbock, TX",Metropolitan Statistical Area,48219,Hockley County,Texas,Outlying
+31180,"Lubbock, TX",Metropolitan Statistical Area,48303,Lubbock County,Texas,Central
+31180,"Lubbock, TX",Metropolitan Statistical Area,48305,Lynn County,Texas,Outlying
+31260,"Lufkin, TX",Micropolitan Statistical Area,48005,Angelina County,Texas,Central
+32580,"McAllen-Edinburg-Mission, TX",Metropolitan Statistical Area,48215,Hidalgo County,Texas,Central
+33260,"Midland, TX",Metropolitan Statistical Area,48317,Martin County,Texas,Outlying
+33260,"Midland, TX",Metropolitan Statistical Area,48329,Midland County,Texas,Central
+33420,"Mineral Wells, TX",Micropolitan Statistical Area,48363,Palo Pinto County,Texas,Central
+34420,"Mount Pleasant, TX",Micropolitan Statistical Area,48063,Camp County,Texas,Outlying
+34420,"Mount Pleasant, TX",Micropolitan Statistical Area,48343,Morris County,Texas,Outlying
+34420,"Mount Pleasant, TX",Micropolitan Statistical Area,48449,Titus County,Texas,Central
+34860,"Nacogdoches, TX",Micropolitan Statistical Area,48347,Nacogdoches County,Texas,Central
+36220,"Odessa, TX",Metropolitan Statistical Area,48135,Ector County,Texas,Central
+37300,"Palestine, TX",Micropolitan Statistical Area,48001,Anderson County,Texas,Central
+37420,"Pampa, TX",Micropolitan Statistical Area,48179,Gray County,Texas,Central
+37420,"Pampa, TX",Micropolitan Statistical Area,48393,Roberts County,Texas,Outlying
+37580,"Paris, TX",Micropolitan Statistical Area,48277,Lamar County,Texas,Central
+37580,"Paris, TX",Micropolitan Statistical Area,48387,Red River County,Texas,Outlying
+38380,"Plainview, TX",Micropolitan Statistical Area,48153,Floyd County,Texas,Outlying
+38380,"Plainview, TX",Micropolitan Statistical Area,48189,Hale County,Texas,Central
+38920,"Port Lavaca, TX",Micropolitan Statistical Area,48057,Calhoun County,Texas,Central
+39700,"Raymondville, TX",Micropolitan Statistical Area,48489,Willacy County,Texas,Central
+40100,"Rio Grande City-Roma, TX",Micropolitan Statistical Area,48427,Starr County,Texas,Central
+41660,"San Angelo, TX",Metropolitan Statistical Area,48235,Irion County,Texas,Outlying
+41660,"San Angelo, TX",Metropolitan Statistical Area,48451,Tom Green County,Texas,Central
+41700,"San Antonio-New Braunfels, TX",Metropolitan Statistical Area,48013,Atascosa County,Texas,Outlying
+41700,"San Antonio-New Braunfels, TX",Metropolitan Statistical Area,48019,Bandera County,Texas,Outlying
+41700,"San Antonio-New Braunfels, TX",Metropolitan Statistical Area,48029,Bexar County,Texas,Central
+41700,"San Antonio-New Braunfels, TX",Metropolitan Statistical Area,48091,Comal County,Texas,Outlying
+41700,"San Antonio-New Braunfels, TX",Metropolitan Statistical Area,48187,Guadalupe County,Texas,Central
+41700,"San Antonio-New Braunfels, TX",Metropolitan Statistical Area,48259,Kendall County,Texas,Outlying
+41700,"San Antonio-New Braunfels, TX",Metropolitan Statistical Area,48325,Medina County,Texas,Outlying
+41700,"San Antonio-New Braunfels, TX",Metropolitan Statistical Area,48493,Wilson County,Texas,Outlying
+43300,"Sherman-Denison, TX",Metropolitan Statistical Area,48181,Grayson County,Texas,Central
+43660,"Snyder, TX",Micropolitan Statistical Area,48415,Scurry County,Texas,Central
+44100,"Springfield, IL",Metropolitan Statistical Area,17129,Menard County,Illinois,Outlying
+44100,"Springfield, IL",Metropolitan Statistical Area,17167,Sangamon County,Illinois,Central
+44140,"Springfield, MA",Metropolitan Statistical Area,25013,Hampden County,Massachusetts,Central
+44180,"Springfield, MO",Metropolitan Statistical Area,29043,Christian County,Missouri,Central
+44180,"Springfield, MO",Metropolitan Statistical Area,29059,Dallas County,Missouri,Outlying
+44180,"Springfield, MO",Metropolitan Statistical Area,29077,Greene County,Missouri,Central
+44180,"Springfield, MO",Metropolitan Statistical Area,29167,Polk County,Missouri,Outlying
+44180,"Springfield, MO",Metropolitan Statistical Area,29225,Webster County,Missouri,Outlying
+44220,"Springfield, OH",Metropolitan Statistical Area,39023,Clark County,Ohio,Central
+44500,"Stephenville, TX",Micropolitan Statistical Area,48143,Erath County,Texas,Central
+44860,"Sulphur Springs, TX",Micropolitan Statistical Area,48223,Hopkins County,Texas,Central
+45020,"Sweetwater, TX",Micropolitan Statistical Area,48353,Nolan County,Texas,Central
+45500,"Texarkana, TX-AR",Metropolitan Statistical Area,48037,Bowie County,Texas,Central
+45880,"Town of Pecos, TX",Micropolitan Statistical Area,48389,Reeves County,Texas,Central
+46340,"Tyler, TX",Metropolitan Statistical Area,48423,Smith County,Texas,Central
+46620,"Uvalde, TX",Micropolitan Statistical Area,48463,Uvalde County,Texas,Central
+46900,"Vernon, TX",Micropolitan Statistical Area,48487,Wilbarger County,Texas,Central
+47020,"Victoria, TX",Metropolitan Statistical Area,48175,Goliad County,Texas,Outlying
+47020,"Victoria, TX",Metropolitan Statistical Area,48469,Victoria County,Texas,Central
+47380,"Waco, TX",Metropolitan Statistical Area,48035,Bosque County,Texas,Outlying
+47380,"Waco, TX",Metropolitan Statistical Area,48145,Falls County,Texas,Outlying
+47380,"Waco, TX",Metropolitan Statistical Area,48309,McLennan County,Texas,Central
+48660,"Wichita Falls, TX",Metropolitan Statistical Area,48009,Archer County,Texas,Outlying
+48660,"Wichita Falls, TX",Metropolitan Statistical Area,48077,Clay County,Texas,Outlying
+48660,"Wichita Falls, TX",Metropolitan Statistical Area,48485,Wichita County,Texas,Central
+49820,"Zapata, TX",Micropolitan Statistical Area,48505,Zapata County,Texas,Central

@@ -4,9 +4,11 @@ using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Protocol;
 using ProspectStudio.Core;
 using ProspectStudio.Core.Campaigns;
+using ProspectStudio.Core.Jobs;
 using ProspectStudio.Core.SearchProfiles;
 using ProspectStudio.Core.Status;
 using ProspectStudio.Infrastructure.Config;
+using ProspectStudio.Infrastructure.Reference;
 using ProspectStudio.Infrastructure.Storage;
 using ProspectStudio.Infrastructure.Workspace;
 using ProspectStudio.Mcp.Cli;
@@ -21,7 +23,7 @@ try
 {
     if (args.Length > 0)
     {
-        return CliVerbs.Run(args, options);
+        return await CliVerbs.RunAsync(args, options, CancellationToken.None);
     }
 
     // Defence in depth for the hard rule: the stdio transport writes JSON-RPC to the standard
@@ -36,9 +38,15 @@ try
     builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
     builder.Services.AddSingleton<StatusService>();
     builder.Services.AddProspectStudioStorage(options.DatabasePath);
+    builder.Services.AddProspectStudioReferenceData(options);
     builder.Services.AddSingleton<ICampaignWorkspace, FileSystemCampaignWorkspace>();
     builder.Services.AddSingleton<SearchProfileValidator>();
     builder.Services.AddSingleton<CampaignService>();
+    builder.Services.AddSingleton(provider => new JobRunner(
+        provider.GetRequiredService<IJobStore>(),
+        provider.GetRequiredService<TimeProvider>(),
+        JobLogging.Observer));
+    builder.Services.AddSingleton<JobService>();
 
     builder.Services
         .AddMcpServer(server => server.ServerInfo = new Implementation

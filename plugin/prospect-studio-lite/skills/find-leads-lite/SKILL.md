@@ -1,6 +1,6 @@
 ---
 name: find-leads-lite
-description: Finds and researches companies in a sales territory that are likely to buy specialized equipment (e.g., scissor/boom lifts), scores them with cited evidence, routes each to its local dealer, and delivers a Google-Sheets-compatible leads.xlsx. Use when the user says "find leads", "build a prospect list", "who should we mail", "find companies that need lifts in <area>", or "research these companies".
+description: Finds and researches companies in a sales territory that are likely to buy specialized equipment (e.g., scissor/boom lifts), scores them with cited evidence, routes each to its local dealer, and delivers a Google-Sheets-compatible leads.xlsx. Use when the user says "find leads", "build a prospect list", "who should we mail", "find companies that need lifts around Houston", or "research these companies".
 ---
 
 # Find leads (Prospect Studio Lite)

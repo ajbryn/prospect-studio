@@ -176,7 +176,7 @@ Documents\Prospect Studio\
 | `templates` | id, name, slug, spec_json, thumbnail_path, created_at |
 | `tracking_codes` | code (PK), campaign_id, lead_id, url, created_at, unique(campaign_id, lead_id) |
 | `renders` | campaign_id, lead_id, template_id, pdf_path, png_path, qa_json, rendered_at |
-| `jobs` | id, kind, campaign_id, status (`queued`,`running`,`succeeded`,`failed`,`interrupted`,`cancelled`), progress, message, params_json, result_json, started_at, finished_at |
+| `jobs` | id, kind, campaign_id, status (`queued`,`running`,`succeeded`,`failed`,`interrupted`,`cancelled`), progress, message, params_json, result_json, **created_at**, started_at, finished_at |
 | `warranty` | id, registration_id, serial, model, customer_name, name_norm, address_norm, zip, purchase_date, dealer_id, promo_code |
 | `matches` | campaign_id, lead_id, warranty_id, tier (`exact`/`strong`/`fuzzy`), status (`confirmed`/`needs_review`/`rejected`) |
 
@@ -199,9 +199,19 @@ Documents\Prospect Studio\
 
 ### 6.1 Setup pipeline (`setup` CLI verb and `prepare_data` tool → job)
 1. **NAICS 2022** table: committed as `Infrastructure/Reference/naics2022.csv`, generated once from the Census NAICS file.
-2. **County boundaries:** Census cartographic boundary file (`cb_<year>_us_county_500k.zip`, under `https://www2.census.gov/geo/tiger/GENZ<year>/shp/`) → DuckDB spatial `ST_Read` → `counties.parquet` (GEOID, NAME, STATEFP, geometry). *Verify the latest year URL.*
-3. **CBSA delineation** (Census "list1" delineation file) → `cbsa.csv` (CBSA code, title, county FIPS). *Verify URL/year.*
-4. **ZCTA ↔ county** relationship file (Census rel2020 `tab20_zcta520_county20_natl.txt`) → `zcta_county.csv`.
+2. **County boundaries** (verified in C2): `https://www2.census.gov/geo/tiger/GENZ2025/shp/cb_2025_us_county_500k.zip` (11.7 MB, 3,235 rows). Probe the year downward from the current one — 2026 is not published yet. `ST_Read` **cannot open the zip directly**; use the GDAL virtual path with forward slashes:
+
+```sql
+LOAD spatial;   -- required on EVERY new connection, not just at install
+COPY (SELECT GEOID, NAME, STATEFP, geom AS geometry
+      FROM ST_Read('/vsizip/C:/…/cb_2025_us_county_500k.zip/cb_2025_us_county_500k.shp'))
+TO 'counties.parquet' (FORMAT PARQUET);
+```
+
+The geometry column from `ST_Read` is `geom` (lowercase); the attribute columns are uppercase VARCHAR. Geometry round-trips through Parquet as WKB and reads back as `GEOMETRY('EPSG:4269')` — NAD83, close enough to WGS84 here. Note `ST_Point` takes **(lon, lat)**.
+
+3. **CBSA delineation** (verified in C2): `https://www2.census.gov/programs-surveys/metro-micro/geographies/reference-files/2023/delineation-files/list1_2023.xlsx` → `cbsa.csv`. It is an **`.xlsx`, not a CSV** (read it with ClosedXML, already in the stack): rows 1–2 are a title, **row 3 is the header**, and trailing rows are notes or blank. State and county FIPS are **separate** string columns (`'48'`, `'015'`) that must be concatenated into a 5-digit GEOID. ~1,915 data rows. 2023 is the newest — 2024 onward 404, so this file is effectively frozen.
+4. **ZCTA ↔ county** (verified in C2): `https://www2.census.gov/geo/docs/maps-data/data/rel2020/zcta520/tab20_zcta520_county20_natl.txt` → `zcta_county.csv`. **Pipe-delimited with a UTF-8 BOM**, ~47,860 rows. Columns are `GEOID_ZCTA5_20` and `GEOID_COUNTY_20`. **Rows with an empty ZCTA exist** (counties containing none) and must be filtered out.
 5. **Overture Places per state:** DuckDB with `httpfs` + `spatial`; anonymous S3 in `us-west-2`:
 
 ```sql
@@ -223,7 +233,7 @@ COPY (
 
 ```json
 { "type": "cbsa", "label": "Houston-Pasadena-The Woodlands, TX", "cbsa": "26420",
-  "states": ["TX"], "countyFips": ["48015","48039","48071","48157","48167","48201","48291","48339","48473"],
+  "states": ["TX"], "countyFips": ["48015","48039","48071","48157","48167","48201","48291","48339","48407","48473"],
   "zips": [], "radius": null, "bbox": [-96.6, 28.8, -94.3, 30.7] }
 ```
 
@@ -302,7 +312,7 @@ Window: `mail_date ≤ purchase_date ≤ mail_date + windowDays` (default 365). 
 ## 8. Jobs
 - An in-process `JobRunner` (`Channel<JobRequest>`, max 2 concurrent) persists state in `jobs` and reports progress roughly every 2 s.
 - Kinds: `prepare_data`, `prefetch_websites`, `render_campaign`, `build_dealer_packets`.
-- On startup, any job still `running` becomes `interrupted`. Every job is safe to re-run (it skips completed items).
+- On startup, any job still `running` **or `queued`** becomes `interrupted`. The queue is in-memory, so after a restart a `queued` row has nothing left to run it and would otherwise sit at `queued` forever. Every job is safe to re-run (it skips completed items), so the recovery is always "run it again".
 - Tools: `get_job`, `list_jobs`, `cancel_job`.
 
 ## 9. Workbook (`leads.xlsx`)

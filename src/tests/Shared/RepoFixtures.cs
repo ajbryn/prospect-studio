@@ -18,6 +18,38 @@ internal static class RepoFixtures
 
     public static string SearchProfileSchema => Schema("search-profile.schema.json");
 
+    /// <summary>
+    /// Fixtures that belong to the tests rather than to the spec pack, from
+    /// <c>src/tests/Fixtures</c>. The test projects copy that folder to their output too.
+    /// </summary>
+    public static string TestFixturesDirectory { get; } = Path.Combine(AppContext.BaseDirectory, "Fixtures");
+
+    /// <summary>
+    /// The ten Houston CBSA counties plus Jefferson 48245, with simplified geometry. Generated from
+    /// the real Census shapefile by <c>src/tests/Fixtures/geo/build-geo-fixtures.cs</c>.
+    /// </summary>
+    public static string CountiesHoustonParquet => GeoFixture("counties_houston.parquet");
+
+    /// <summary>Every Texas CBSA row plus every "Springfield, *" row, for the ambiguous-query case.</summary>
+    public static string CbsaExcerptCsv => GeoFixture("cbsa_excerpt.csv");
+
+    /// <summary>ZCTA-to-county rows for the eleven fixture counties, including multi-county ZIP 77494.</summary>
+    public static string ZctaCountyExcerptCsv => GeoFixture("zcta_county_excerpt.csv");
+
+    /// <summary>
+    /// Trimmed copies of the three raw Census sources, each keeping the awkward shape its real
+    /// counterpart has, so the parsing side of the setup pipeline is testable with no network.
+    /// </summary>
+    public static string CountyShapefileZipSource => GeoFixture("sources", "cb_2025_us_county_500k.zip");
+
+    public static string CbsaXlsxSource => GeoFixture("sources", "list1_2023.xlsx");
+
+    public static string ZctaCountyTextSource => GeoFixture("sources", "tab20_zcta520_county20_natl.txt");
+
+    /// <summary>A path under <c>src/tests/Fixtures/geo</c>, checked so a broken content copy is obvious.</summary>
+    public static string GeoFixture(params string[] parts) =>
+        Existing(Path.Combine(TestFixturesDirectory, "geo"), "src/tests/Fixtures/geo", parts);
+
     /// <summary>A path under <c>poc/fixtures</c>, checked so a broken content copy is obvious.</summary>
     public static string Fixture(params string[] parts) => Existing(FixturesDirectory, "poc/fixtures", parts);
 

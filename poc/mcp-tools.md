@@ -54,7 +54,11 @@ Output:
 
 ### `prepare_data` (job)
 Input: `{ "states": ["TX"], "force": false }` → `{ "jobId": "job_ab12cd", "status": "queued" }`.
-Steps: NAICS check → counties → CBSA → ZCTA → Overture extract per state. Skips completed steps unless `force`.
+Steps: counties → CBSA → ZCTA → Overture extract per state. Skips completed steps unless `force`. (NAICS needs no step — the table is embedded in the assembly.)
+
+`states` is validated against the US state list; a bogus code is `VALIDATION_FAILED`. **Until C4, `states` affects nothing** — the reference files are national and only the Overture extract is per-state — so the job message says so rather than implying state data was prepared.
+
+Errors: **`JOB_RUNNING`** when a `prepare_data` job is already active (hint names it). Two concurrent runs would write the same `counties.parquet` and leave a corrupt file that completeness checks then report as done.
 
 ### `get_job` / `list_jobs` / `cancel_job`
 `get_job { jobId }` →
@@ -62,7 +66,11 @@ Steps: NAICS check → counties → CBSA → ZCTA → Overture extract per state
 { "jobId": "job_ab12cd", "kind": "prefetch_websites", "status": "running", "progress": 0.42,
   "message": "Fetched 336/800 sites (12 blocked by robots.txt)", "result": null }
 ```
-`list_jobs { campaignId?, status? }` → `{ "jobs": [...] }`. `cancel_job { jobId }` → `{ "status": "cancelled" }`.
+`list_jobs { campaignId?, status? }` → `{ "jobs": [...] }`, newest first.
+
+`cancel_job { jobId }` → `{ "status": "cancelled" }`. On a job that has **already finished** it is **idempotent and returns that job's actual terminal status** (`succeeded`, `failed`, `interrupted`) rather than erroring — a skill polling a job it just asked to cancel shouldn't have to handle a race as an exception. Unknown `jobId` → `NOT_FOUND`.
+
+**On server start, both `running` and `queued` rows become `interrupted`.** The queue lives in memory, so after a restart a `queued` row has nothing left to run it and would otherwise claim `queued` forever. technical-design §8 mentions only the `running` transition; this closes that gap. Every job is safe to re-run, so the recovery is always "run it again".
 
 ## Campaign
 
@@ -92,7 +100,7 @@ Output:
   "counts": { "byStatus": {}, "byTier": {}, "byDealer": [] },
   "lastExportAt": null, "lastRenderAt": null }
 ```
-`profile` is `null` until `save_search_profile` runs. **`geoLabel` stays `null` in C1** — resolving a query like "Houston metro" to "Houston-Pasadena-The Woodlands, TX" needs `resolve_geography`, which arrives in C2; until then the raw query is available under `profile.geographyQuery`. Counts are empty objects/arrays for a new campaign, not absent. Errors: `NOT_FOUND`.
+`profile` is `null` until `save_search_profile` runs. **`geoLabel` stays `null` until C4** — it is read from the campaign's stored `geo_json`, which `find_candidates` is the first thing to write. `resolve_geography` exists from C2, but `save_search_profile` deliberately does not call it: that would make saving a profile fail when reference data is missing, for a display-only field. Until then the raw query is available under `profile.geographyQuery`. Counts are empty objects/arrays for a new campaign, not absent. Errors: `NOT_FOUND`.
 
 ### `save_search_profile`
 Input: `{ "campaignId": "...", "profile": { /* schemas/search-profile.schema.json */ } }`
@@ -135,7 +143,22 @@ Input (any one form):
 { "type": "radius", "center": { "address": "1200 Main St, Houston, TX" }, "radiusMiles": 25 }
 { "type": "dealer", "values": ["gulf"] }
 ```
-Output: a `GeoScope` (see [technical-design §6.2](technical-design.md#62-geography-resolution)) plus `alternatives[]` when the query was ambiguous.
+Output: a `GeoScope` (see [technical-design §6.2](technical-design.md#62-geography-resolution)), **flat**, with `alternatives[]` as a sibling key present only when the query was ambiguous:
+
+```json
+{ "type": "cbsa", "label": "Houston-Pasadena-The Woodlands, TX", "cbsa": "26420",
+  "states": ["TX"], "countyFips": ["48015","…","48473"], "zips": [], "radius": null,
+  "bbox": [-96.6, 28.8, -94.3, 30.7] }
+```
+
+- **Every `GeoScope` key is always present**, using `[]` or `null` where it doesn't apply — same principle as `get_campaign`'s counts, so a caller never has to distinguish "absent" from "empty". `alternatives` is the one exception, omitted when empty, like `details[]` on errors.
+- `radius` is `{ "lat": …, "lon": …, "miles": … }` when `type` is `radius`, matching `$defs.geoScope` in [`schemas/search-profile.schema.json`](schemas/search-profile.schema.json), which is the authoritative shape.
+- **Multi-value queries union, they never discard.** `{type:"counties"|"zips"|"cbsa", values:[…]}` with more than one value returns the **union** of all of them (label e.g. "2 metro areas"). `alternatives` is only for a genuinely ambiguous **single** value. Silently dropping something the caller explicitly asked for is worse than refusing it.
+- **`warnings[]`**, a sibling key omitted when empty, names input that resolved to nothing — unresolvable ZIPs, for instance. A mostly-good list of fifty ZIPs is not blocked by two typos, but what was dropped is always reported.
+- `alternatives[]` entries are `{ "type", "label", "cbsa", "countyFips" }`.
+- Errors: **`NOT_FOUND`** when a place name matches nothing (hint: suggest a more specific form such as "Harris County, TX"); `VALIDATION_FAILED` when no recognizable input was supplied at all; `NOT_READY` when reference data is missing (hint: run `prepare_data`); `UNSUPPORTED` for `type: "dealer"` until C5; `EXTERNAL_API` when the Census geocoder fails.
+- Input is **lenient on purpose**: a `type` with no `values` falls back to reading `query` as that type, and `county`, `states`, `zip`, `zipcode`, `zipcodes`, `zip_codes`, `metro` and `msa` are accepted as aliases. The enum in `$defs.geoScope` remains authoritative for *output*.
+- Type `dealer` arrives in C5.
 
 ### `lookup_overture_categories`
 Input: `{ "query": "warehouse", "state": "TX", "limit": 15 }`

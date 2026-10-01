@@ -1,0 +1,10 @@
+# The repo root sets `* text=auto`, which relies on git's content sniffing. Binary fixtures say so
+# outright, so no line-ending normalisation can ever corrupt one.
+*.parquet binary
+*.xlsx binary
+*.zip binary
+
+# The trimmed ZCTA source is text, but its UTF-8 BOM and CRLF endings are the point of the fixture:
+# it exists to prove the parser copes with the real file's shape. -text keeps it byte-exact on every
+# platform while still letting git diff it.
+geo/sources/*.txt -text

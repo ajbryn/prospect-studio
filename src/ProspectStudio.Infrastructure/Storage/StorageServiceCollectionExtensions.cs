@@ -2,6 +2,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using ProspectStudio.Core.Campaigns;
+using ProspectStudio.Core.Jobs;
 
 namespace ProspectStudio.Infrastructure.Storage;
 
@@ -29,6 +30,7 @@ public static class StorageServiceCollectionExtensions
             .AddInterceptors(new SqlitePragmaInterceptor()));
 
         services.AddSingleton<ICampaignStore, EfCampaignStore>();
+        services.AddSingleton<IJobStore, EfJobStore>();
         return services;
     }
 }

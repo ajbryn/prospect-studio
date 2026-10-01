@@ -18,7 +18,7 @@ internal static class ToolSchemas
         var matches = tools.Where(tool => tool.Name == name).ToList();
         matches.Count.ShouldBe(
             1,
-            $"tools/list must advertise exactly one '{name}' (mcp-tools.md §Summary lists it for chunk C1). "
+            $"tools/list must advertise exactly one '{name}' (mcp-tools.md §Summary). "
             + $"It listed: {string.Join(", ", tools.Select(tool => tool.Name).Order(StringComparer.Ordinal))}");
 
         return matches[0];

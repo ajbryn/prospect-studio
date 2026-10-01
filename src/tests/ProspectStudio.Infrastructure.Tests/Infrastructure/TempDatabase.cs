@@ -25,6 +25,13 @@ internal sealed class TempDatabase : IAsyncDisposable
 
     public IDbContextFactory<ProspectDbContext> Factory => _services.GetRequiredService<IDbContextFactory<ProspectDbContext>>();
 
+    /// <summary>
+    /// Everything <see cref="StorageServiceCollectionExtensions.AddProspectStudioStorage"/> registered,
+    /// so a test can take a store through the same registration the server uses instead of naming the
+    /// EF implementation type.
+    /// </summary>
+    public IServiceProvider Services => _services;
+
     /// <summary>Opens (or re-opens) the database file in <paramref name="directory"/>.</summary>
     public static TempDatabase In(string directory)
     {

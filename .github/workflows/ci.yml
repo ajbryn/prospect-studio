@@ -35,6 +35,19 @@ jobs:
       - name: Build
         run: dotnet build src/ProspectStudio.sln --no-restore -c ${{ matrix.configuration }}
 
+      # DuckDB fetches spatial/httpfs on first use and caches them under
+      # ~/.duckdb. Tests must not hit the network, so prime the cache here via
+      # the doctor verb and let the tests LOAD from disk. Bump the key when the
+      # DuckDB.NET version changes.
+      - name: Cache DuckDB extensions
+        uses: actions/cache@v4
+        with:
+          path: ~/.duckdb/extensions
+          key: duckdb-extensions-${{ runner.os }}-v1.5.6
+
+      - name: Prime DuckDB extensions
+        run: dotnet run --project src/ProspectStudio.Mcp -c ${{ matrix.configuration }} --no-build -- doctor
+
       # Category=Network tests hit live APIs and are opt-in per CLAUDE.md.
       - name: Test
         run: dotnet test src/ProspectStudio.sln --no-build -c ${{ matrix.configuration }} --filter "Category!=Network"
