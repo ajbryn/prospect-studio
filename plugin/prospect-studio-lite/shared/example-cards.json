@@ -1,0 +1,144 @@
+{
+  "brand": {
+    "brandPrimary": "#1c3550",
+    "brandAccent": "#e8a317",
+    "logoSrc": "Brand Kit/logo.svg",
+    "returnAddress": "Your Brand Lifts \u00b7 100 Example Pkwy \u00b7 Houston, TX 77002",
+    "legal": "Offer valid through participating dealers until 2027-03-31. Placeholder legal text."
+  },
+  "cards": [
+    {
+      "id": "V1",
+      "fileStem": "V1_hero-bold-left",
+      "layout": "hero-bold-left",
+      "palette": "brand-dark",
+      "scene": {
+        "timeOfDay": "day",
+        "liftPosition": "right",
+        "buildingType": "warehouse",
+        "signText": "Bayou Fulfillment Co."
+      },
+      "fields": {
+        "cta": "Scan for a demo",
+        "spec1": "26 ft working height",
+        "spec2": "1,000 lb platform",
+        "spec3": "Non-marking tires",
+        "greeting": "Hello from Gulf Lift Equipment,",
+        "personal": "Congrats on the 180,000 sq ft addition in Katy. Fitting out high-bay racking goes faster with the right lift on site.",
+        "benefit1": "Same-week delivery and operator training",
+        "benefit2": "Local service from West Houston",
+        "offerCode": "LIFT-K7Q3MX",
+        "offerText": "Mention this code for free delivery and first-year service.",
+        "url": "https://example.com/lp?code=K7Q3MX",
+        "dealerName": "Gulf Lift Equipment",
+        "dealerLine": "Katy, TX \u00b7 (281) 555-0142",
+        "attn": "Attn: Facilities Manager",
+        "company": "Bayou Fulfillment Co.",
+        "address1": "24500 Brazos Way",
+        "cityStateZip": "Katy, TX 77494",
+        "headline": "Reaching new heights in Katy, Bayou Fulfillment?",
+        "tagline": "Scissor and boom lifts for high-bay work, delivered this week."
+      }
+    },
+    {
+      "id": "V2",
+      "fileStem": "V2_photo-band-bottom",
+      "layout": "photo-band-bottom",
+      "palette": "brand-dark",
+      "scene": {
+        "timeOfDay": "day",
+        "liftPosition": "left",
+        "buildingType": "warehouse",
+        "signText": "Bayou Fulfillment Co."
+      },
+      "fields": {
+        "cta": "Scan for a demo",
+        "spec1": "26 ft working height",
+        "spec2": "1,000 lb platform",
+        "spec3": "Non-marking tires",
+        "greeting": "Hello from Gulf Lift Equipment,",
+        "personal": "Congrats on the 180,000 sq ft addition in Katy. Fitting out high-bay racking goes faster with the right lift on site.",
+        "benefit1": "Same-week delivery and operator training",
+        "benefit2": "Local service from West Houston",
+        "offerCode": "LIFT-K7Q3MX",
+        "offerText": "Mention this code for free delivery and first-year service.",
+        "url": "https://example.com/lp?code=K7Q3MX",
+        "dealerName": "Gulf Lift Equipment",
+        "dealerLine": "Katy, TX \u00b7 (281) 555-0142",
+        "attn": "Attn: Facilities Manager",
+        "company": "Bayou Fulfillment Co.",
+        "address1": "24500 Brazos Way",
+        "cityStateZip": "Katy, TX 77494",
+        "headline": "Congrats on the expansion, Bayou Fulfillment.",
+        "tagline": "Scissor and boom lifts for high-bay work, delivered this week."
+      }
+    },
+    {
+      "id": "V3",
+      "fileStem": "V3_spec-panel-left",
+      "layout": "spec-panel-left",
+      "palette": "brand-dark",
+      "scene": {
+        "timeOfDay": "day",
+        "liftPosition": "right",
+        "buildingType": "warehouse",
+        "signText": "Bayou Fulfillment Co."
+      },
+      "fields": {
+        "cta": "Scan for a demo",
+        "spec1": "26 ft working height",
+        "spec2": "1,000 lb platform",
+        "spec3": "Non-marking tires",
+        "greeting": "Hello from Gulf Lift Equipment,",
+        "personal": "Congrats on the 180,000 sq ft addition in Katy. Fitting out high-bay racking goes faster with the right lift on site.",
+        "benefit1": "Same-week delivery and operator training",
+        "benefit2": "Local service from West Houston",
+        "offerCode": "LIFT-K7Q3MX",
+        "offerText": "Mention this code for free delivery and first-year service.",
+        "url": "https://example.com/lp?code=K7Q3MX",
+        "dealerName": "Gulf Lift Equipment",
+        "dealerLine": "Katy, TX \u00b7 (281) 555-0142",
+        "attn": "Attn: Facilities Manager",
+        "company": "Bayou Fulfillment Co.",
+        "address1": "24500 Brazos Way",
+        "cityStateZip": "Katy, TX 77494",
+        "headline": "Built for 30-ft racking in Katy.",
+        "tagline": "Scissor and boom lifts for high-bay work, delivered this week."
+      }
+    },
+    {
+      "id": "V4",
+      "fileStem": "V4_dusk-centered",
+      "layout": "dusk-centered",
+      "palette": "brand-dark",
+      "scene": {
+        "timeOfDay": "dusk",
+        "liftPosition": "left",
+        "buildingType": "warehouse",
+        "signText": "Bayou Fulfillment Co."
+      },
+      "fields": {
+        "cta": "Scan for a demo",
+        "spec1": "26 ft working height",
+        "spec2": "1,000 lb platform",
+        "spec3": "Non-marking tires",
+        "greeting": "Hello from Gulf Lift Equipment,",
+        "personal": "Congrats on the 180,000 sq ft addition in Katy. Fitting out high-bay racking goes faster with the right lift on site.",
+        "benefit1": "Same-week delivery and operator training",
+        "benefit2": "Local service from West Houston",
+        "offerCode": "LIFT-K7Q3MX",
+        "offerText": "Mention this code for free delivery and first-year service.",
+        "url": "https://example.com/lp?code=K7Q3MX",
+        "dealerName": "Gulf Lift Equipment",
+        "dealerLine": "Katy, TX \u00b7 (281) 555-0142",
+        "attn": "Attn: Facilities Manager",
+        "company": "Bayou Fulfillment Co.",
+        "address1": "24500 Brazos Way",
+        "cityStateZip": "Katy, TX 77494",
+        "headline": "Work at height, on your schedule.",
+        "tagline": "Scissor and boom lifts for high-bay work, delivered this week."
+      }
+    }
+  ],
+  "_comment": "Example input for render_postcards.py. Paths are relative to the working directory the script runs in (the connected workspace folder)."
+}
