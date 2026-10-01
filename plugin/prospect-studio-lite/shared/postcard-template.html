@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Postcard {{id}}</title>
+<!--
+  Prospect Studio Lite: 6x9 postcard template (front + back).
+  Page = 9.25in x 6.25in (6x9 trim + 0.125in bleed on every side) = 888 x 600 CSS px.
+  Keep all text at least 0.25in (24px) inside the page edge; the renderer's QA flags text that overflows its box.
+  Placeholders {{name}} are filled (HTML-escaped) by render_postcards.py from cards.json "fields" and "brand".
+  Layout (front):  hero-bold-left | photo-band-bottom | spec-panel-left | dusk-centered
+  Palette:          brand-dark | brand-light
+  Scene: data attributes on .scene (timeOfDay day|dusk, liftPosition left|center|right, buildingType warehouse|plant|shop).
+-->
+<style>
+  @page { size: 9.25in 6.25in; margin: 0; }
+  :root { --primary: {{brandPrimary}}; --accent: {{brandAccent}}; --accent-ink: #1d1500; --ink: #16202a; --paper: #fbfbf8; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { font-family: "Barlow", "Segoe UI", "Liberation Sans", Arial, sans-serif; color: var(--ink); }
+  .page { width: 888px; height: 600px; position: relative; overflow: hidden; page-break-after: always; break-after: page; }
+  .page:last-child { page-break-after: auto; break-after: auto; }
+  .display { font-family: "Barlow Condensed", "Arial Narrow", "Liberation Sans Narrow", "Roboto Condensed", Arial, sans-serif; font-weight: 700; letter-spacing: .005em; }
+
+  /* ---------- FRONT ---------- */
+  .front .scene { position: absolute; inset: 0; }
+  .front .scene svg { width: 100%; height: 100%; display: block; }
+  .front .scene img.photo { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .front .ov { position: absolute; inset: 0; display: flex; flex-direction: column; color: #fff; }
+  .front .logo { position: absolute; top: 34px; right: 40px; max-width: 170px; max-height: 60px; }
+  .front .hl { margin: 0; line-height: .98; text-wrap: balance; }
+  .front .tg { margin: 0; font-weight: 500; line-height: 1.25; }
+  .front .cta { align-self: flex-start; background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: 20px; padding: 9px 18px; border-radius: 6px; margin-top: 16px; }
+  .front .credit { position: absolute; left: 30px; bottom: 26px; font-size: 11px; color: #fff; text-shadow: 0 0 3px #000; }
+
+  .hero-bold-left .ov { background: linear-gradient(90deg, rgba(9,17,27,.9) 0%, rgba(9,17,27,.62) 40%, rgba(9,17,27,0) 66%); padding: 54px 52px; justify-content: flex-end; }
+  .hero-bold-left .hl { font-size: 50px; max-width: 470px; max-height: 250px; overflow: hidden; }
+  .hero-bold-left .tg { font-size: 21px; max-width: 420px; margin-top: 14px; max-height: 80px; overflow: hidden; }
+  .hero-bold-left .cta { display: none; }
+
+  .photo-band-bottom .ov { justify-content: flex-end; }
+  .photo-band-bottom .band { background: #fff; color: var(--ink); padding: 26px 44px 34px; display: flex; gap: 26px; align-items: center; justify-content: space-between; min-height: 190px; }
+  .photo-band-bottom .hl { font-size: 44px; max-height: 136px; overflow: hidden; }
+  .photo-band-bottom .tg { font-size: 19px; color: #44515c; margin-top: 8px; max-height: 50px; overflow: hidden; }
+  .photo-band-bottom .cta { margin-top: 0; flex: none; }
+
+  .spec-panel-left .ov { flex-direction: row; }
+  .spec-panel-left .side { width: 380px; background: var(--primary); padding: 50px 34px 50px 44px; display: flex; flex-direction: column; justify-content: center; }
+  .spec-panel-left .hl { font-size: 42px; max-height: 250px; overflow: hidden; }
+  .spec-panel-left ul { margin: 18px 0 0; padding: 0; list-style: none; font-size: 18px; line-height: 1.55; color: #d6e3ef; }
+  .spec-panel-left li::before { content: "\25B8  "; color: var(--accent); }
+  .spec-panel-left .tg, .spec-panel-left .cta { display: none; }
+
+  .dusk-centered .ov { background: linear-gradient(0deg, rgba(18,10,30,.9) 0%, rgba(18,10,30,.4) 40%, rgba(18,10,30,0) 62%); justify-content: flex-end; align-items: center; text-align: center; padding: 44px 60px 48px; }
+  .dusk-centered .hl { font-size: 50px; max-width: 700px; max-height: 160px; overflow: hidden; }
+  .dusk-centered .tg { font-size: 20px; margin-top: 10px; max-height: 54px; overflow: hidden; }
+  .dusk-centered .cta { align-self: center; }
+
+  .layout-only { display: none; }
+  .hero-bold-left .only-hero, .photo-band-bottom .only-band, .spec-panel-left .only-spec, .dusk-centered .only-dusk { display: flex; }
+
+  /* ---------- BACK ---------- */
+  .back { background: var(--paper); display: grid; grid-template-columns: 540px 1fr; }
+  .back .msg { padding: 44px 30px 40px 48px; display: flex; flex-direction: column; gap: 12px; border-right: 2px dashed #c9ccc6; }
+  .back .greet { font-size: 27px; margin: 0; }
+  .back p { margin: 0; font-size: 16.5px; line-height: 1.38; }
+  .back .personal { max-height: 92px; overflow: hidden; }
+  .back ul { margin: 0; padding-left: 20px; font-size: 15.5px; line-height: 1.45; }
+  .back .offer { display: flex; gap: 16px; align-items: center; background: #fff4dc; border: 2px solid var(--accent); border-radius: 8px; padding: 12px 14px; }
+  .back .qr { width: 108px; height: 108px; flex: none; background: #fff; }
+  .back .qr svg { width: 100%; height: 100%; display: block; }
+  .back .code { font-family: Consolas, "DejaVu Sans Mono", monospace; font-weight: 700; font-size: 22px; letter-spacing: .04em; display: block; }
+  .back .offer span { display: block; font-size: 13.5px; line-height: 1.35; }
+  .back .dealer { font-size: 14.5px; line-height: 1.4; border-top: 2px solid #d8dad5; padding-top: 10px; }
+  .back .dealer b { font-size: 19px; }
+  .back .legal { font-size: 10px; color: #5a646d; line-height: 1.3; margin-top: auto; }
+  .back .addr { padding: 40px 40px 0 34px; display: flex; flex-direction: column; }
+  .back .indicia { align-self: flex-end; border: 2px solid var(--ink); font: 600 11px/1.3 Consolas, "DejaVu Sans Mono", monospace; padding: 8px 10px; text-align: center; text-transform: uppercase; }
+  .back .return { font-size: 11px; color: #5a646d; margin-top: 10px; }
+  .back .to { font: 500 17px/1.5 Consolas, "DejaVu Sans Mono", monospace; margin-top: 110px; }
+  /* USPS barcode clear zone: bottom 0.75in of the address side must stay empty. */
+  .back .clearzone { position: absolute; right: 0; bottom: 0; width: 348px; height: 72px; }
+</style>
+<script>{{qrScript}}</script>
+</head>
+<body>
+
+<!-- FRONT -->
+<section class="page front {{layout}} {{palette}}">
+  <div class="scene" data-time="{{timeOfDay}}" data-lift="{{liftPosition}}" data-building="{{buildingType}}" data-sign="{{signText}}" data-photo="{{photoSrc}}" data-product="{{productSrc}}"></div>
+  <div class="ov">
+    <div class="layout-only only-hero only-dusk" style="flex-direction:column">
+      <h1 class="hl display" data-slot="headline">{{headline}}</h1>
+      <p class="tg" data-slot="tagline">{{tagline}}</p>
+      <span class="cta">{{cta}}</span>
+    </div>
+    <div class="layout-only only-band band">
+      <div>
+        <h1 class="hl display" data-slot="headline">{{headline}}</h1>
+        <p class="tg" data-slot="tagline">{{tagline}}</p>
+      </div>
+      <span class="cta">{{cta}}</span>
+    </div>
+    <div class="layout-only only-spec side">
+      <h1 class="hl display" data-slot="headline">{{headline}}</h1>
+      <ul data-slot="specs"><li>{{spec1}}</li><li>{{spec2}}</li><li>{{spec3}}</li></ul>
+    </div>
+  </div>
+  <img class="logo" src="{{logoSrc}}" alt="" onerror="this.remove()">
+  <span class="credit">{{photoCredit}}</span>
+</section>
+
+<!-- BACK -->
+<section class="page back">
+  <div class="msg">
+    <h2 class="greet display" data-slot="greeting">{{greeting}}</h2>
+    <p class="personal" data-slot="personal">{{personal}}</p>
+    <ul data-slot="benefits"><li>{{benefit1}}</li><li>{{benefit2}}</li></ul>
+    <div class="offer">
+      <div class="qr" data-qr="{{url}}"></div>
+      <div><b class="code" data-slot="offerCode">{{offerCode}}</b><span data-slot="offerText">{{offerText}}</span><span>{{urlDisplay}}</span></div>
+    </div>
+    <div class="dealer" data-slot="dealer">Your local dealer: <b>{{dealerName}}</b><br>{{dealerLine}}</div>
+    <div class="legal">{{legal}}</div>
+  </div>
+  <div class="addr">
+    <div class="indicia">First-Class Mail<br>US Postage Paid</div>
+    <div class="return">{{returnAddress}}</div>
+    <div class="to" data-slot="address">{{attn}}<br>{{company}}<br>{{address1}}<br>{{cityStateZip}}</div>
+  </div>
+  <div class="clearzone"></div>
+</section>
+
+<script>
+(function () {
+  // ---- Scene: license-safe illustrated building + lift (no third-party imagery) ----
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+  function scene(el) {
+    var photo = el.dataset.photo, product = el.dataset.product;
+    if (photo && photo.indexOf('{{') !== 0) { el.dataset.done = '1'; el.innerHTML = '<img class="photo" src="' + photo + '" alt="">'; return; }
+    var dusk = el.dataset.time === 'dusk', pos = el.dataset.lift || 'right', name = (el.dataset.sign || '').toUpperCase();
+    var sky = dusk ? ['#f4a45c', '#6b4f86'] : ['#eef4f8', '#9fc3e0'];
+    var wall = dusk ? '#b7aea4' : '#dcd6ca', panel = dusk ? '#a39a90' : '#c9c2b4', ground = dusk ? '#5d5a63' : '#8e949a';
+    var x0 = pos === 'left' ? 95 : pos === 'center' ? 245 : 395;
+    if (el.dataset.done) return; el.dataset.done = '1';
+    var gid = 'sky' + Math.random().toString(36).slice(2, 8);
+    var i, s = '<svg viewBox="0 0 600 400" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">';
+    s += '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + sky[1] + '"/><stop offset="1" stop-color="' + sky[0] + '"/></linearGradient></defs>';
+    s += '<rect width="600" height="400" fill="url(#' + gid + ')"/>' + (dusk ? '<circle cx="480" cy="110" r="34" fill="#ffd28a" opacity=".85"/>' : '');
+    s += '<rect x="0" y="300" width="600" height="100" fill="' + ground + '"/><rect x="0" y="302" width="600" height="4" fill="' + (dusk ? '#77747c' : '#b0b5ba') + '"/>';
+    var bt = el.dataset.building || 'warehouse', top = bt === 'shop' ? 170 : 130;
+    s += '<rect x="60" y="' + top + '" width="480" height="' + (305 - top) + '" fill="' + wall + '"/><rect x="60" y="' + (top - 4) + '" width="480" height="12" fill="' + panel + '"/>';
+    for (i = 120; i < 540; i += 60) s += '<line x1="' + i + '" y1="' + (top + 8) + '" x2="' + i + '" y2="305" stroke="' + panel + '" stroke-width="2"/>';
+    if (bt === 'plant') s += '<rect x="440" y="70" width="26" height="' + (top - 66) + '" fill="' + panel + '"/><rect x="480" y="90" width="20" height="' + (top - 86) + '" fill="' + panel + '"/>';
+    [150, 230, 310, 390, 470].forEach(function (x) {
+      s += '<rect x="' + (x - 24) + '" y="232" width="48" height="73" fill="' + (dusk ? '#4b5560' : '#5f6b76') + '"/>';
+      for (var y = 250; y < 300; y += 18) s += '<line x1="' + (x - 24) + '" y1="' + y + '" x2="' + (x + 24) + '" y2="' + y + '" stroke="#77838d"/>';
+      if (dusk) s += '<rect x="' + (x - 6) + '" y="222" width="12" height="5" fill="#ffd98a"/>';
+    });
+    var fs = Math.min(19, 440 / Math.max(name.length, 1));
+    s += '<rect x="150" y="' + (top + 22) + '" width="300" height="36" rx="2" fill="#1f3a5a"/>';
+    s += '<text x="300" y="' + (top + 40 + fs * 0.35) + '" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, Liberation Sans Narrow, Arial, sans-serif" font-weight="700" font-size="' + fs + '" fill="#fff" letter-spacing="1">' + esc(name) + '</text>';
+    s += '<ellipse cx="' + (x0 + 55) + '" cy="337" rx="72" ry="6" fill="#000" opacity=".28"/>';
+    if (product && product.indexOf('{{') !== 0) {
+      s += '<image href="' + product + '" x="' + (x0 - 10) + '" y="150" width="130" height="190" preserveAspectRatio="xMidYMax meet"/>';
+    } else {
+      s += '<rect x="' + x0 + '" y="298" width="110" height="26" rx="3" fill="#2b3036"/><rect x="' + x0 + '" y="296" width="110" height="9" fill="#e8a317"/>';
+      s += '<circle cx="' + (x0 + 20) + '" cy="327" r="9" fill="#17191c"/><circle cx="' + (x0 + 90) + '" cy="327" r="9" fill="#17191c"/>';
+      for (i = 0; i < 3; i++) { var yb = 298 - i * 36, yt = yb - 36;
+        s += '<line x1="' + (x0 + 10) + '" y1="' + yb + '" x2="' + (x0 + 100) + '" y2="' + yt + '" stroke="#e8a317" stroke-width="5"/><line x1="' + (x0 + 100) + '" y1="' + yb + '" x2="' + (x0 + 10) + '" y2="' + yt + '" stroke="#e8a317" stroke-width="5"/><circle cx="' + (x0 + 55) + '" cy="' + (yb - 18) + '" r="3" fill="#2b3036"/>'; }
+      s += '<rect x="' + (x0 - 5) + '" y="180" width="120" height="10" fill="#e8a317"/><path d="M' + (x0 - 3) + ' 180 V154 H' + (x0 + 113) + ' V180 M' + (x0 - 3) + ' 167 H' + (x0 + 113) + '" stroke="#2b3036" stroke-width="3" fill="none"/>';
+    }
+    el.innerHTML = s + '</svg>';
+  }
+  document.querySelectorAll('.scene').forEach(scene);
+
+  // ---- QR codes (vendored MIT QRCode library) ----
+  document.querySelectorAll('[data-qr]').forEach(function (el) {
+    if (el.querySelector('svg')) return;
+    var text = el.getAttribute('data-qr');
+    if (!text || text.indexOf('{{') === 0 || !window.QRCodeLib) { el.style.border = '2px dashed #c33'; return; }
+    var q = new window.QRCodeLib.QRCode(-1, window.QRCodeLib.QRErrorCorrectLevel.M);
+    q.addData(text); q.make();
+    var n = q.getModuleCount(), m = 4, d = '';
+    for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) if (q.isDark(r, c)) d += 'M' + (c + m) + ' ' + (r + m) + 'h1v1h-1z';
+    el.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + (n + 2 * m) + ' ' + (n + 2 * m) + '" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#fff"/><path d="' + d + '" fill="#000"/></svg>';
+  });
+
+  // Hide list items whose placeholder was left empty.
+  document.querySelectorAll('li').forEach(function (li) { if (!li.textContent.trim()) li.remove(); });
+  document.querySelectorAll('.credit').forEach(function (e) { if (!e.textContent.trim()) e.remove(); });
+  window.__ready = true;
+})();
+</script>
+</body>
+</html>
