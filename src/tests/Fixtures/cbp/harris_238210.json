@@ -1,0 +1,10 @@
+[["ESTAB","EMPSZES","EMPSZES_LABEL","NAICS2017","NAICS2017","state","county"],
+["833","001","All establishments","238210","238210","48","201"],
+["422","210","Establishments with less than 5 employees","238210","238210","48","201"],
+["119","220","Establishments with 5 to 9 employees","238210","238210","48","201"],
+["110","230","Establishments with 10 to 19 employees","238210","238210","48","201"],
+["94","241","Establishments with 20 to 49 employees","238210","238210","48","201"],
+["45","242","Establishments with 50 to 99 employees","238210","238210","48","201"],
+["33","251","Establishments with 100 to 249 employees","238210","238210","48","201"],
+["7","252","Establishments with 250 to 499 employees","238210","238210","48","201"],
+["3","254","Establishments with 500 to 999 employees","238210","238210","48","201"]]

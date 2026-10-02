@@ -7,6 +7,7 @@ using ProspectStudio.Core.Campaigns;
 using ProspectStudio.Core.Jobs;
 using ProspectStudio.Core.SearchProfiles;
 using ProspectStudio.Core.Status;
+using ProspectStudio.Infrastructure.Census;
 using ProspectStudio.Infrastructure.Config;
 using ProspectStudio.Infrastructure.Reference;
 using ProspectStudio.Infrastructure.Storage;
@@ -35,10 +36,13 @@ try
     builder.Services.AddSerilog(Log.Logger);
 
     builder.Services.AddSingleton(options);
+    // Market sizing hangs its call budget, its 1 req/s spacing and its 30-day cache lifetime off this one
+    // registration, so a fake clock here would quietly disable all three at once.
     builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
     builder.Services.AddSingleton<StatusService>();
     builder.Services.AddProspectStudioStorage(options.DatabasePath);
     builder.Services.AddProspectStudioReferenceData(options);
+    builder.Services.AddProspectStudioMarketSizing(options);
     builder.Services.AddSingleton<ICampaignWorkspace, FileSystemCampaignWorkspace>();
     builder.Services.AddSingleton<SearchProfileValidator>();
     builder.Services.AddSingleton<CampaignService>();

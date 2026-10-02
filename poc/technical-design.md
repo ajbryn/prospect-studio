@@ -126,7 +126,7 @@ poc/fixtures/, poc/schemas/                     # copied into test output as con
 | `MAPILLARY_TOKEN` | none | Mapillary client token; enables the `mapillary` provider |
 | `PS_OVERTURE_RELEASE` | discovered latest, else `2026-09-23.1` | Overture release to extract |
 | `PS_CBP_YEAR` | discovered latest available | Census CBP dataset year |
-| `CENSUS_API_KEY` | none | Optional; raises Census rate limits |
+| `CENSUS_API_KEY` | none | **Required for `estimate_market` (C3).** Since May 2026 every Census *data* query without a key returns HTTP 302 to `missing_key.html` with header `X-DataWebAPI-KeyError: 1`. Metadata (`…/variables.json`) still works unkeyed, which is what the CBP year probe uses. Free from `https://api.census.gov/data/key_signup.html`, emailed |
 | Stretch: `OPENAI_API_KEY`, `GEMINI_API_KEY`, `GOOGLE_MAPS_API_KEY`, `HUBSPOT_TOKEN`, `LOB_API_KEY`, `ANTHROPIC_API_KEY` | none | Only read by stretch chunks |
 
 ## 5. Storage
@@ -223,10 +223,16 @@ COPY (
   FROM read_parquet('s3://overturemaps-us-west-2/release/{release}/theme=places/type=place/*', hive_partitioning=1)
   WHERE bbox.xmin BETWEEN {minx} AND {maxx} AND bbox.ymin BETWEEN {miny} AND {maxy}
 ) TO '{out}/places_{ST}_bbox.parquet' (FORMAT PARQUET);
--- then clip to the state polygon and write places_{ST}.parquet
+-- then narrow to the state (see below) and write places_{ST}.parquet
 ```
 
-**Important:** as of the September 2026 release, Overture **removed the `categories` column**. Use `taxonomy` (`primary`, `hierarchy`, `alternates`) and `basic_category`. *Run `DESCRIBE` on the release first and record the actual schema in the decisions log.*
+**Verified against release `2026-09-23.1` in C4.** Anonymous S3 works with no credentials. The column list above runs unchanged. Overture **removed the `categories` column**: use `taxonomy` STRUCT(`primary` VARCHAR, `hierarchy` VARCHAR[], `alternates` VARCHAR[]) and `basic_category`. `taxonomy.primary` is the leaf and the last element of `hierarchy`; `basic_category` is a coarser rollup and often *not* the leaf. `bbox` is STRUCT(xmin, xmax, ymin, ymax), so bbox pre-filtering works. Discover the latest release from `https://stac.overturemaps.org/catalog.json` (`latest` field).
+
+**Do not clip to the state polygon.** `ST_Within` against a `ST_Union_Agg` of the county geometries took **149 s**; filtering `addresses[1].region = 'TX'` takes **1 s** and keeps 1,622,773 rows versus 1,630,017 from the polygon — a rounding difference against a 150× cost. The county join at query time ([§6.3](#63-candidate-query-local-parquet)) does the precise spatial work anyway.
+
+**`addresses` is a list of structs** — STRUCT(freeform, locality, postcode, region, country)[] — but its maximum length in Texas is 1, so `addresses[1]` is safe. Fields are `.freeform` (street), `.locality` (city), `.postcode`, `.region`, `.country`. **Region is plain `TX`, not `US-TX`.** Postcodes are sometimes ZIP+4 (`77064-3335`) so normalize to the first 5; `phones` and `websites` are flat `VARCHAR[]` with inconsistent formatting (`7137477411`, `17136884530`, bare `http://`), and a large share of rows have no website at all.
+
+**Scale:** the Texas bbox extract takes ~70 s for 2.19M rows / 275 MB (the bbox spills into Oklahoma and Mexico); narrowing to Texas leaves ~1.62M rows / ~205 MB. Hence `prepare_data` is a background job, while candidate search over the local file is a few seconds.
 
 ### 6.2 Geography resolution
 `resolve_geography` returns a `GeoScope`:
@@ -247,16 +253,23 @@ COPY (
 ### 6.3 Candidate query (local Parquet)
 
 ```sql
+LOAD spatial;   -- required on EVERY connection
 SELECT p.*, c.GEOID AS county_fips
 FROM read_parquet('{overture}/places_TX.parquet') p
-JOIN counties c ON ST_Within(p.geometry, c.geometry)
+JOIN (SELECT GEOID, ST_SetCRS(geometry, 'OGC:CRS84') AS geometry
+      FROM read_parquet('{refdata}/counties.parquet')) c
+  ON ST_Within(p.geometry, c.geometry)
 WHERE c.GEOID IN ({countyFips})
   AND p.confidence >= {minConfidence}
   AND ( list_has_any(p.taxonomy.hierarchy, {categories}) OR p.taxonomy.primary IN ({categories})
         OR regexp_matches(lower(p.name), {keywordRegex}) )
 ```
 
-Keep the county join cheap: pre-filter by bbox, and cache county geometries in a DuckDB temp table per call.
+**The `ST_SetCRS` is not optional.** Overture geometry is `OGC:CRS84` while the Census counties Parquet is `EPSG:4269`, and DuckDB raises a Binder error on `ST_Within` across mismatched CRS. Aligning the *county* side is the cheap fix; the two datums are equivalent for our purposes. Test fixtures must reproduce the same CRS pairing, or the tests pass while real data throws.
+
+Verified in C4: this join runs in ~2 s over the full 1.6M-row Texas file (437,396 places across the eleven fixture counties), and the category and name filters add ~0.6 s — so the under-30 s target in C4 is comfortable. Note `p.name` is the alias created by §6.1's `names.primary AS name`.
+
+Prefer **specific `taxonomy.primary` values over broad ones**: `contractor` has ~19k Texas rows and `manufacturer` ~17k via hierarchy, so wide categories destroy precision.
 
 ## 7. Algorithms
 

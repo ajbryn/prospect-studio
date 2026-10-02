@@ -8,21 +8,21 @@
       "name": "Warehousing & 3PL",
       "rationale": "High-bay racking, lighting and maintenance work at height.",
       "naics": ["4931", "4841", "4885"],
-      "overtureCategories": ["warehouse", "logistics_service", "freight_and_cargo_service", "cold_storage"],
+      "overtureCategories": ["warehouse", "distribution_service", "freight_and_cargo_service", "storage_facility", "motor_freight_trucking"],
       "keywords": ["distribution", "fulfillment", "warehouse", "3pl", "logistics", "racking"]
     },
     {
       "name": "High-bay manufacturing",
       "rationale": "Plant maintenance, crane and lighting access.",
       "naics": ["332", "333", "336"],
-      "overtureCategories": ["manufacturing", "metal_fabricator"],
+      "overtureCategories": ["manufacturer", "industrial_equipment_manufacturer", "metal_fabricator", "machine_shop"],
       "keywords": ["fabrication", "manufacturing", "machining", "steel"]
     },
     {
       "name": "Electrical, HVAC & sign contractors",
       "rationale": "Daily installation work at height on commercial jobs.",
       "naics": ["238210", "238220", "238990"],
-      "overtureCategories": ["electrician", "hvac_services", "sign_making", "glass_and_mirror_shop"],
+      "overtureCategories": ["electrician", "hvac_service", "sign_making", "glass_and_mirror_sales_service"],
       "keywords": ["electrical", "hvac", "mechanical", "sign", "glazing"]
     },
     {
@@ -39,7 +39,7 @@
   "signals": ["permit", "hiring", "expansion", "news", "contract"],
   "exclusions": {
     "naics": ["532412"],
-    "overtureCategories": ["equipment_rental", "restaurant"],
+    "overtureCategories": ["machine_and_tool_rental", "truck_rental_service", "restaurant"],
     "keywords": ["equipment rental"],
     "suppressionReasons": ["customer", "dnc", "dealer", "competitor"]
   },

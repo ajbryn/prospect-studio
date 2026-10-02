@@ -1,0 +1,80 @@
+{
+  "variables": {
+    "for": {
+      "label": "Census API FIPS 'for' clause",
+      "concept": "Census API Geography Specification",
+      "predicateType": "fips-for",
+      "group": "N/A",
+      "limit": 0,
+      "predicateOnly": true
+    },
+    "in": {
+      "label": "Census API FIPS 'in' clause",
+      "concept": "Census API Geography Specification",
+      "predicateType": "fips-in",
+      "group": "N/A",
+      "limit": 0,
+      "predicateOnly": true
+    },
+    "ucgid": {
+      "label": "Uniform Census Geography Identifier clause",
+      "concept": "Census API Geography Specification",
+      "predicateType": "ucgid",
+      "group": "N/A",
+      "limit": 0,
+      "predicateOnly": true,
+      "hasGeoCollectionSupport": true
+    },
+    "ESTAB": {
+      "label": "Number of establishments",
+      "concept": "All Sectors: County Business Patterns, including ZIP Code Business Patterns, by Legal Form of Organization and Employment Size Class for the U.S., States, and Selected Geographies: 2023",
+      "predicateType": "int",
+      "group": "CB2300CBP",
+      "limit": 0,
+      "attributes": "ESTAB_F"
+    },
+    "EMP": {
+      "label": "Number of employees",
+      "concept": "All Sectors: County Business Patterns, including ZIP Code Business Patterns, by Legal Form of Organization and Employment Size Class for the U.S., States, and Selected Geographies: 2023",
+      "predicateType": "int",
+      "group": "CB2300CBP",
+      "limit": 0,
+      "attributes": "EMP_F"
+    },
+    "EMPSZES": {
+      "label": "Employment size of establishments code",
+      "concept": "All Sectors: County Business Patterns, including ZIP Code Business Patterns, by Legal Form of Organization and Employment Size Class for the U.S., States, and Selected Geographies: 2023",
+      "required": "default displayed",
+      "predicateType": "string",
+      "group": "CB2300CBP",
+      "limit": 0,
+      "attributes": "EMPSZES_LABEL"
+    },
+    "NAICS2017": {
+      "label": "2017 NAICS code",
+      "concept": "All Sectors: County Business Patterns, including ZIP Code Business Patterns, by Legal Form of Organization and Employment Size Class for the U.S., States, and Selected Geographies: 2023",
+      "required": "default displayed",
+      "predicateType": "string",
+      "group": "CB2300CBP",
+      "limit": 0,
+      "attributes": "NAICS2017_F,NAICS2017_LABEL,NAICS2017_F",
+      "values": {
+        "item": {
+          "00": "Total for all sectors",
+          "23821": "Electrical Contractors and Other Wiring Installation Contractors",
+          "238210": "Electrical Contractors and Other Wiring Installation Contractors",
+          "4931": "Warehousing and Storage",
+          "49311": "General Warehousing and Storage",
+          "493110": "General Warehousing and Storage"
+        }
+      }
+    },
+    "YEAR": {
+      "label": "Year",
+      "concept": "All Sectors: County Business Patterns, including ZIP Code Business Patterns, by Legal Form of Organization and Employment Size Class for the U.S., States, and Selected Geographies: 2023",
+      "predicateType": "string",
+      "group": "CB2300CBP",
+      "limit": 0
+    }
+  }
+}
