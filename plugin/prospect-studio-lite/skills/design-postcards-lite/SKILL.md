@@ -12,7 +12,7 @@ Produce previews the user can react to, iterate, and save one design as `design/
 - `postcard-template.html`: 6x9 front/back template with 4 front layouts, an illustrated building-and-lift scene, and a QR code
 - `example-cards.json`: a complete, working example of the input format
 
-Reference files: `references/design-spec.md` (fields, layouts, limits, template format), `references/copy-guidelines.md`, `references/imagery-rules.md`.
+Reference files: `references/design-spec.md` (fields, layouts, limits, template format), `references/copy-guidelines.md`.
 
 ## Step 0: Check the renderer (once per session)
 1. Run `python3 <shared>/render_postcards.py --help`.
@@ -52,6 +52,6 @@ Use a preview code such as `LIFT-PREVIEW` and the real URL pattern. Keep every t
 Save `design/template.json` as described in `references/design-spec.md`: layout, palette and scene, plus text fields written with **merge placeholders** (`{shortName}`, `{city}`, `{personalLine}`, `{dealerName}`…) instead of this lead's specific values. Confirm that the user approves the template. Then say that the next step is "produce the postcards for approved leads."
 
 ## Guardrails
-- Follow `references/copy-guidelines.md` and `references/imagery-rules.md`. In particular: **never use Google Street View, Google Maps or Google Earth images**, and use only images whose license the user confirms for print.
+- Follow `references/copy-guidelines.md`.
 - Offers, prices and financing terms come only from the user or `brand.json`.
 - The personal line uses only public, business-level facts from the research record, never anything negative or about individuals.
