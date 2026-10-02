@@ -50,7 +50,8 @@ Background (optional): [lead search strategy](../docs/03-Lead-Search-Strategy.md
 - **Claude Code** (for building) and **Claude Desktop** with Cowork (for using)
 - ~5 GB free disk (Overture extract for one state plus Census reference data)
 - A spreadsheet app to review leads. **No Excel license needed:** Google Sheets with **Google Drive for desktop** (recommended), Excel for the web (free Microsoft account), or LibreOffice Calc. Optional chunk C8b adds a native Google Sheet (needs a Google Cloud OAuth client)
-- Optional keys, as environment variables in the MCP server config: `CENSUS_API_KEY` (free; raises rate limits). Stretch chunks: `OPENAI_API_KEY` or `GEMINI_API_KEY`, `GOOGLE_MAPS_API_KEY`, `HUBSPOT_TOKEN`, `LOB_API_KEY`
+- **`CENSUS_API_KEY` is required** for market sizing (chunk C3), as an environment variable in the MCP server config. Since May 2026 every Census *data* query without one is refused with a redirect. It is free and arrives by email: `https://api.census.gov/data/key_signup.html`. Reference-data setup (C2) still works without it, because metadata and bulk file downloads are unkeyed.
+- Optional keys: `MAPILLARY_TOKEN` and `GOOGLE_MAPS_API_KEY` (street-level reference imagery, C10). Stretch chunks: `OPENAI_API_KEY` or `GEMINI_API_KEY`, `HUBSPOT_TOKEN`, `LOB_API_KEY`
 
 ## Kickoff prompt (paste into Claude Code, in this folder)
 

@@ -15,7 +15,9 @@ public sealed class StatusService(PsOptions options, IReferenceDataInventory? re
         var warnings = new List<string>();
         if (!options.Keys.HasCensus)
         {
-            warnings.Add($"No {PsOptionsFactory.CensusKeyVariable}: limited to 500 calls/day");
+            warnings.Add(
+                $"No {PsOptionsFactory.CensusKeyVariable}: estimate_market cannot run. "
+                + "Get a free key at https://api.census.gov/data/key_signup.html");
         }
 
         if (string.Equals(options.TrackingBaseUrl, PsOptionsFactory.DefaultTrackingBaseUrl, StringComparison.Ordinal))

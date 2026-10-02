@@ -21,4 +21,17 @@
     <ProjectReference Include="..\..\ProspectStudio.Core\ProspectStudio.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Shared\CbpFixtures.cs" Link="Market\CbpFixtures.cs" />
+  </ItemGroup>
+
+  <!-- The recorded Census CBP response bodies from src/tests/Fixtures/cbp (see its README). Only that
+       subfolder: the C3 market tests are pure logic over those bodies and need no geography data. -->
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)..\Fixtures\cbp\**\*"
+             Exclude="$(MSBuildThisFileDirectory)..\Fixtures\cbp\**\*.cs;$(MSBuildThisFileDirectory)..\Fixtures\cbp\**\*.md"
+             LinkBase="Fixtures\cbp"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

@@ -49,7 +49,8 @@ Output:
 { "version": "0.1.0", "home": "C:\\Users\\a\\Documents\\Prospect Studio", "data": "C:\\Users\\a\\AppData\\Local\\ProspectStudio",
   "ready": { "referenceData": true, "overture": { "release": "2026-09-23.1", "states": ["TX"] }, "brandKit": true, "dealers": 3, "territories": 64, "suppression": 7 },
   "keys": { "census": false, "openai": false, "gemini": false, "googleMaps": false, "hubspot": false },
-  "trackingBaseUrl": "https://example.com/lp?code={code}", "warnings": ["No CENSUS_API_KEY: limited to 500 calls/day"] }
+  "trackingBaseUrl": "https://example.com/lp?code={code}",
+  "warnings": ["No CENSUS_API_KEY: estimate_market cannot run. Get a free key at https://api.census.gov/data/key_signup.html"] }
 ```
 
 ### `prepare_data` (job)
@@ -168,13 +169,39 @@ Output: `{ "results": [ { "category": "warehouse", "path": ["...","warehouse"], 
 
 ### `estimate_market`
 Input: `{ "naics": ["4931","238210"], "geo": { "query": "Houston metro" }, "minEmployees": 20 }` (or `"geo": <GeoScope>`)
-Output:
+
+`naics` and `geo` are **required** — unlike `find_candidates`, this tool takes no `campaignId`, so there is no profile to default the geography from. `minEmployees` is optional; when it is absent `withMinEmployees` is **`null`** (present but null, like every other nullable field), not a copy of `establishments`.
+
+Errors: `VALIDATION_FAILED` for a bogus NAICS code, **or for a geography that resolves to no counties** — reporting a market of zero for an empty scope is the dangerous reading, so refuse instead. `NOT_READY` when `CENSUS_API_KEY` is absent (hint names the variable), when the key is rejected, or when no CBP year is published — three distinct messages, and the year case must *not* blame the key. `EXTERNAL_API` after retries. Note that error bodies are **not** reliably JSON: the cross-state 400 returns plain text.
+Output (**real verified 2023 figures** for the ten-county Houston CBSA, not placeholders):
 ```json
-{ "cbpYear": 2024, "geoLabel": "Houston-Pasadena-The Woodlands, TX",
-  "byNaics": [ { "naics": "4931", "title": "Warehousing and Storage", "establishments": 612, "withMinEmployees": 318 } ],
-  "total": { "establishments": 1310, "withMinEmployees": 520 },
-  "notes": ["Some county cells suppressed by Census; totals are lower bounds"] }
+{ "cbpYear": 2023, "geoLabel": "Houston-Pasadena-The Woodlands, TX",
+  "byNaics": [
+    { "naics": "4931", "title": "Warehousing and Storage", "establishments": 462, "withMinEmployees": 152 },
+    { "naics": "238210", "title": "Electrical Contractors and Other Wiring Installation Contractors",
+      "establishments": 1310, "withMinEmployees": 217 } ],
+  "total": { "establishments": 1772, "withMinEmployees": 369 },
+  "notes": ["4931: 23 of 462 establishments have no size band published, and Liberty and San Jacinto counties are absent entirely, so withMinEmployees is a lower bound."] }
 ```
+
+**Suppression does not look how you would expect, and this drives the whole design.** Census does not blank a cell or use a sentinel — `ESTAB` is never empty, null or negative. Instead **whole rows are simply absent**:
+- Band rows go missing while the `001` "All establishments" row remains, so `sum(bands) < 001`. In the example above, **439 of 462** are banded and **23** are unaccounted for; Austin County reports 3 establishments and **no band rows at all**.
+- **Entire counties can be missing** from the response. Two of the ten requested came back with nothing — which means *unknown*, never zero.
+
+So always request the `001` row, compute `001_total − bands_sum`, and treat any shortfall or absent county as making `withMinEmployees` a **lower bound**, saying so in `notes` with the size of the gap. `EMP` on a band row comes back `"0"` with `EMP_F = "N"` and is not a real zero — don't read it.
+
+Other contract-shaping facts, all verified against the live API:
+- **Never sum the `001` band** — it equals the sum of the others exactly, so including it doubles every count.
+- **Some bands are *nested inside* others, and summing both double-counts.** The nine standard bands — `210` (<5), `220`, `230`, `241`, `242`, `251`, `252`, `254`, `260` (1,000+) — partition the total exactly. Alongside them a response may also carry **detail bands that subdivide `260`**: in Harris County / NAICS 00, `262` (1,000–1,499) = 51, `263` (1,500–2,499) = 51, `271` (2,500–4,999) = 21 and `273` (5,000+) = 12 sum to exactly `260` = 135. `260`'s label "1,000 employees or more" is **accurate**, not misleading.
+- So the selection rule is: parse `[lower, upper]` from each `EMPSZES_LABEL`, **discard any band whose range is contained within another band's range**, then take every surviving band whose lower bound is ≥ `minEmployees`. Never hard-code a band list — which detail bands appear varies by query (Texas state level publishes none; sixteen Texas counties publish `263`).
+- Getting this wrong is silent: including `263` alongside `260` inflates Houston 4931's `withMinEmployees` from 152 to 155, and its suppression shortfall is likewise 23, not 20. Both still look like plausible answers.
+- **One request per state.** `for=county:…&in=state:48,22` returns HTTP 400 "wildcard mismatch in geography hierarchy".
+- **A NAICS code already includes its descendants** (`4931` = 360 in Harris, `49311` = `493110` = 256). Drop any supplied code that is a prefix-descendant of another supplied code, or the overlap is double-counted. Different branches (`4931` + `238210`) are disjoint and safe to add.
+- Values are **all strings**, in an array-of-arrays with a header row; `state` and `county` are trailing columns. Naming a variable in `get=` *and* filtering on it **duplicates that header column** — parse by index and tolerate duplicates, or leave filtered variables out of `get=`.
+- With a key, a missing year is a plain **404**; a **302** always means a key problem (`missing_key.html` vs `invalid_key.html`). No rate-limit headers are published, so don't claim a number.
+- **A `204 No Content` is indistinguishable between "that NAICS code is not published in this vintage" and "this market is genuinely empty."** The API returns the same empty response for both, so the tool reports zero establishments with every requested county listed as absent, and hedges the total. This is an API limitation, not something code can resolve — don't add a heuristic that guesses which case it is.
+- **A `minEmployees` above the top published band cannot be answered.** The highest band is open-ended ("1,000 or more"), so a threshold of 2,000 has no band to sum and `withMinEmployees` is **`null`** with a note naming that top band — never `0`, which would read as "no establishments that large" when such establishments almost certainly exist inside the open band.
+- **One tool call is capped at 10 Census requests** (NAICS codes × states, counted after overlapping codes are dropped), because the per-domain rate limit of 1 req/s makes a larger fan-out collide with the 20 s response budget. Exceeding it is `VALIDATION_FAILED` asking for fewer codes or a smaller area — never a silently truncated market.
 
 ## Lists
 
@@ -327,7 +354,7 @@ Output: `{ "matches": { "exact": 1, "strong": 2, "fuzzy": 3 }, "byCohort": [ { "
 | `CONFLICT` | Locked cohorts, duplicate names, override conflicts | "Pass force=true to reassign." |
 | `FILE_LOCKED` | Workbook or output file open in another app | "Close leads.xlsx in Excel." |
 | `EXTERNAL_API` | Census/S3/website failures after retries | "Census API returned 503; try again later." |
-| `RATE_LIMITED` | External rate limit hit | "Add CENSUS_API_KEY or wait." |
+| `RATE_LIMITED` | External rate limit hit | "Wait a few minutes and try again." (Not a Census hint any more: a key is mandatory there, and no rate-limit headers or documented daily cap exist.) |
 | `LICENSE_BLOCKED` | Asset lacks print rights | "Replace products/foo.png or add print rights to its .asset.json." |
 | `JOB_RUNNING` | Conflicting job already running for the campaign | "Wait for job_ab12cd." |
 | `UNSUPPORTED` | Feature not built yet (stretch) | "Available after chunk S3." |
