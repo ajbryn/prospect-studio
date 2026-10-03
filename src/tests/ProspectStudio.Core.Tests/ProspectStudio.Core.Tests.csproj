@@ -23,14 +23,34 @@
 
   <ItemGroup>
     <Compile Include="..\Shared\CbpFixtures.cs" Link="Market\CbpFixtures.cs" />
+    <Compile Include="..\Shared\RepoFixtures.cs" Link="Candidates\RepoFixtures.cs" />
+    <Compile Include="..\Shared\SamplePlaces.cs" Link="Candidates\SamplePlaces.cs" />
+    <Compile Include="..\Shared\PlacesDataFixture.cs" Link="Candidates\PlacesDataFixture.cs" />
+    <Compile Include="..\Shared\FileFingerprint.cs" Link="Candidates\FileFingerprint.cs" />
   </ItemGroup>
 
-  <!-- The recorded Census CBP response bodies from src/tests/Fixtures/cbp (see its README). Only that
-       subfolder: the C3 market tests are pure logic over those bodies and need no geography data. -->
+  <!-- The recorded Census CBP response bodies from src/tests/Fixtures/cbp (see its README) and the
+       Overture places fixtures from src/tests/Fixtures/places. Only those two subfolders: the Core
+       tests are pure logic and need no county geometry. -->
   <ItemGroup>
     <Content Include="$(MSBuildThisFileDirectory)..\Fixtures\cbp\**\*"
              Exclude="$(MSBuildThisFileDirectory)..\Fixtures\cbp\**\*.cs;$(MSBuildThisFileDirectory)..\Fixtures\cbp\**\*.md"
              LinkBase="Fixtures\cbp"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)..\Fixtures\places\**\*"
+             Exclude="$(MSBuildThisFileDirectory)..\Fixtures\places\**\*.cs;$(MSBuildThisFileDirectory)..\Fixtures\places\**\*.md"
+             LinkBase="Fixtures\places"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- The spec pack's fixtures travel with the test assembly (technical-design §3): the candidate
+       tests read poc/fixtures/sample-places.csv and sample-search-profile.json. -->
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)..\..\..\poc\fixtures\**\*"
+             LinkBase="poc\fixtures"
+             CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)..\..\..\poc\schemas\**\*"
+             LinkBase="poc\schemas"
              CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

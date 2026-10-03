@@ -8,7 +8,15 @@ namespace ProspectStudio.Core.Status;
 /// without it the report says reference data is not ready, which is the honest answer when nothing is
 /// there to ask.
 /// </param>
-public sealed class StatusService(PsOptions options, IReferenceDataInventory? referenceData = null)
+/// <param name="overture">
+/// Looks at <c>overture\&lt;release&gt;\</c> so <c>ready.overture</c> reports the release and the states
+/// actually on disk from C4 onward, instead of the placeholder C0 shipped (mcp-tools.md
+/// §find_candidates). Optional: without it the report says no extract is prepared.
+/// </param>
+public sealed class StatusService(
+    PsOptions options,
+    IReferenceDataInventory? referenceData = null,
+    IOvertureDataInventory? overture = null)
 {
     public StatusReport GetStatus()
     {
@@ -25,13 +33,17 @@ public sealed class StatusService(PsOptions options, IReferenceDataInventory? re
             warnings.Add($"No {PsOptionsFactory.TrackingBaseUrlVariable}: postcards would use the placeholder {PsOptionsFactory.DefaultTrackingBaseUrl}");
         }
 
+        // No extract means no release: a release reported beside an empty state list would read as
+        // though data for it had been prepared.
+        var states = overture?.States ?? [];
+
         return new StatusReport(
             Version: ProductVersion.Current,
             Home: options.Home,
             Data: options.Data,
             Ready: new ReadinessReport(
                 ReferenceData: referenceData?.IsComplete ?? false,
-                Overture: new OvertureReadiness(Release: null, States: []),
+                Overture: new OvertureReadiness(states.Count == 0 ? null : overture?.Release, states),
                 BrandKit: false,
                 Dealers: 0,
                 Territories: 0,

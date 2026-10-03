@@ -110,4 +110,45 @@ public sealed class EfCampaignStore(IDbContextFactory<ProspectDbContext> context
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return true;
     }
+
+    public async Task<bool> SaveGeographyAsync(
+        string campaignId,
+        string? geoJson,
+        DateTimeOffset updatedAt,
+        CancellationToken cancellationToken)
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var campaign = await context.Campaigns
+            .FirstOrDefaultAsync(row => row.Id == campaignId, cancellationToken)
+            .ConfigureAwait(false);
+        if (campaign is null)
+        {
+            return false;
+        }
+
+        campaign.GeoJson = geoJson;
+        campaign.UpdatedAt = updatedAt;
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return true;
+    }
+
+    public async Task<CampaignCounts> GetCountsAsync(string campaignId, CancellationToken cancellationToken)
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var byStatus = await context.Leads
+            .AsNoTracking()
+            .Where(lead => lead.CampaignId == campaignId)
+            .GroupBy(lead => lead.Status)
+            .Select(group => new { Status = group.Key, Leads = group.Count() })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        // byTier and byDealer stay empty until scoring (C6) and dealer assignment (C5) fill them.
+        return new CampaignCounts(
+            byStatus.ToDictionary(row => row.Status, row => row.Leads, StringComparer.Ordinal),
+            new Dictionary<string, int>(StringComparer.Ordinal),
+            []);
+    }
 }

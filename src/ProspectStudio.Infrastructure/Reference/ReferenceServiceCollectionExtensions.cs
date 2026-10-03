@@ -26,9 +26,9 @@ public static class ReferenceServiceCollectionExtensions
         services.AddSingleton<IReferenceDataInventory>(
             provider => provider.GetRequiredService<ReferenceDataFiles>());
 
-        services.AddSingleton<CensusHttpClient>();
+        services.AddSingleton<ProspectStudioHttpClient>();
         services.AddSingleton<IReferenceFileSource>(provider => new CensusReferenceFileSource(
-            provider.GetRequiredService<CensusHttpClient>(),
+            provider.GetRequiredService<ProspectStudioHttpClient>(),
             Path.Combine(options.CacheDirectory, SourceCacheFolder),
             provider.GetRequiredService<TimeProvider>()));
 

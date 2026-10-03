@@ -13,6 +13,14 @@ public sealed class ProspectDbContext(DbContextOptions<ProspectDbContext> option
 
     public DbSet<Job> Jobs => Set<Job>();
 
+    public DbSet<Company> Companies => Set<Company>();
+
+    public DbSet<Site> Sites => Set<Site>();
+
+    public DbSet<SourceRecord> SourceRecords => Set<SourceRecord>();
+
+    public DbSet<Lead> Leads => Set<Lead>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);

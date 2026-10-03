@@ -8,7 +8,7 @@
       "name": "Warehousing & 3PL",
       "rationale": "High-bay racking, lighting and maintenance work at height.",
       "naics": ["4931", "4841", "4885"],
-      "overtureCategories": ["warehouse", "distribution_service", "freight_and_cargo_service", "storage_facility", "motor_freight_trucking"],
+      "overtureCategories": ["warehouse", "distribution_service", "freight_and_cargo_service", "motor_freight_trucking"],
       "keywords": ["distribution", "fulfillment", "warehouse", "3pl", "logistics", "racking"]
     },
     {

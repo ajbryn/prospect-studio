@@ -12,7 +12,7 @@ namespace ProspectStudio.Infrastructure.Reference;
 /// The response is treated strictly as data: two numbers and a label that is trimmed and length-capped
 /// before it reaches a <c>GeoScope</c>, never anything that could read as an instruction.
 /// </remarks>
-public sealed class CensusGeocoder(CensusHttpClient http) : IAddressGeocoder
+public sealed class CensusGeocoder(ProspectStudioHttpClient http) : IAddressGeocoder
 {
     public const string Endpoint = "https://geocoding.geo.census.gov/geocoder/locations/onelineaddress";
 
@@ -28,7 +28,7 @@ public sealed class CensusGeocoder(CensusHttpClient http) : IAddressGeocoder
         var url = $"{Endpoint}?address={Uri.EscapeDataString(address)}&benchmark={Benchmark}&format=json";
 
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        deadline.CancelAfter(CensusHttpClient.ResponseTimeout);
+        deadline.CancelAfter(ProspectStudioHttpClient.ResponseTimeout);
 
         string body;
         try

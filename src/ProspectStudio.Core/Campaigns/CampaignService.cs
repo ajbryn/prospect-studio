@@ -96,8 +96,8 @@ public sealed class CampaignService(
             campaign.Status,
             campaign.Product,
             Summarize(campaign),
-            GeoLabel: null,
-            CampaignCounts.Empty,
+            GeoLabel: CampaignGeography.Label(campaign.GeoJson),
+            await store.GetCountsAsync(campaign.Id, cancellationToken).ConfigureAwait(false),
             LastExportAt: null,
             LastRenderAt: null);
     }
