@@ -225,6 +225,11 @@ Output:
 ```
 Re-running with the same inputs is idempotent. `replace: true` clears candidates without research first.
 
+- **Exclusions come from the saved search profile** (`exclusions.overtureCategories` and `exclusions.keywords`) and are applied here — §6.3's SQL omitted them and this input list never mentioned them, which left the only consumer of a declared profile field undefined. An optional `excludedCategories` parameter overrides the profile's, the same way `categories` and `keywords` do.
+- **`found` = `stored` + `duplicates`**, matching the example's own arithmetic (2890 + 230 = 3120). `suppressed` counts are reported separately per reason and are **not** part of `stored`.
+- The first address, website and phone are taken from their lists; a ZIP+4 postcode is truncated to 5 digits; a phone is stored **verbatim** (formats are inconsistent — `7137477411`, `17136884530` — and normalization is not needed until matching in C13).
+- `get_campaign.geoLabel` starts being populated here, because this is the first tool to write the campaign's `geo_json`. `get_status.ready.overture` likewise reports the real release and extracted states from C4 onward, rather than the hardcoded `{release: null, states: []}` placeholder C0 shipped.
+
 ### `assign_dealers` / `apply_suppression`
 Input: `{ "campaignId": "..." }` → counts changed. Manual overrides are preserved.
 

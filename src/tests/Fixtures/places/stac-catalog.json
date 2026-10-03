@@ -1,0 +1,55 @@
+{
+  "type": "Catalog",
+  "id": "Overture Releases",
+  "stac_version": "1.1.0",
+  "description": "All Overture Releases",
+  "links": [
+    {
+      "rel": "root",
+      "href": "https://stac.overturemaps.org/catalog.json",
+      "type": "application/json",
+      "title": "Overture Releases"
+    },
+    {
+      "rel": "child",
+      "href": "https://stac.overturemaps.org/2026-08-19.0/catalog.json",
+      "type": "application/json",
+      "title": "2026-08-19.0 Overture Release"
+    },
+    {
+      "rel": "self",
+      "href": "https://stac.overturemaps.org/catalog.json",
+      "type": "application/json"
+    },
+    {
+      "rel": "child",
+      "href": "https://stac.overturemaps.org/2026-09-23.0/catalog.json",
+      "type": "application/json",
+      "title": "2026-09-23.0 Overture Release"
+    },
+    {
+      "rel": "child",
+      "href": "https://stac.overturemaps.org/2026-09-23.1/catalog.json",
+      "type": "application/json",
+      "title": "2026-09-23.1 Overture Release",
+      "latest": true
+    }
+  ],
+  "latest": "2026-09-23.1",
+  "registry": {
+    "path": "s3://overturemaps-us-west-2/registry",
+    "manifest": [
+      [
+        "part-00000-dac9b802-06ab-4b07-bde1-50c0e93de033-c000.zstd.parquet",
+        "05065c7b-9272-4260-bbd1-2bb7cfa761e2"
+      ]
+    ]
+  },
+  "title": "Overture Releases",
+  "stac_extensions": [
+    "https://stac-extensions.github.io/vcs/v0.1.0/schema.json"
+  ],
+  "vcs:type": "git",
+  "vcs:branch": "main",
+  "vcs:commit": "1ddc02f68050fbf53a296df84b3977a0f8f2db80"
+}

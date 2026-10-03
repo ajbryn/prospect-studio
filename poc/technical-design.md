@@ -274,14 +274,25 @@ Prefer **specific `taxonomy.primary` values over broad ones**: `contractor` has 
 ## 7. Algorithms
 
 ### 7.1 Name normalization
-Lowercase → `&`→`and` → strip punctuation → remove legal suffixes (`inc`, `incorporated`, `llc`, `l.l.c`, `ltd`, `co`, `corp`, `corporation`, `company`, `lp`, `llp`, `pllc`, `the`) → collapse whitespace. Unit-test with 20+ cases.
+Lowercase → `&`→`and` → **remove** punctuation (not replace with space, so `L.L.C.` → `llc` and `O'Brien` → `obrien`) → strip legal suffixes → collapse whitespace. Unit-test with 20+ cases.
+
+**Position matters, and the original "remove these tokens anywhere" wording was wrong.** Stripping `co` wherever it appears turns `CO Industries` into `industries`, losing the distinguishing word. So:
+
+- **`the` is stripped only in leading position.**
+- **Legal suffixes are stripped only in trailing position**, repeatedly: `inc`, `incorporated`, `llc`, `ltd`, `co`, `corp`, `corporation`, `company`, `lp`, `llp`, `pllc`.
+
+That still satisfies the mandated cases — `The Bayou Fulfillment Co., LLC` → strip leading `the`, then trailing `llc`, then trailing `co` → `bayou fulfillment`; `Gulf Coast Sign & Lighting` → `gulf coast sign and lighting` — while leaving `CO Industries` → `co industries` intact.
 
 ### 7.2 Dedupe (within a campaign)
-1. **Domain key:** registrable domain of the website, ignoring generic hosts (`facebook.com`, `instagram.com`, `linkedin.com`, `yelp.com`, `google.com`, `business.site`, `wixsite.com`, `godaddysites.com`, `squarespace.com`, `sites.google.com`).
-2. **Name + place key:** `name_norm` + geohash-7.
-3. **Fuzzy:** Jaro-Winkler ≥ 0.92 on `name_norm` within 200 m.
+1. **Domain key:** registrable domain of the website, ignoring generic hosts (`facebook.com`, `instagram.com`, `linkedin.com`, `yelp.com`, `google.com`, `business.site`, `wixsite.com`, `godaddysites.com`, `squarespace.com`, `sites.google.com`). "Registrable" is the last two labels after dropping `www.`, plus a short exception list for multi-label public suffixes (`co.uk`, `com.au`, `co.nz`, `com.br`). A full public-suffix list is out of scope for the POC; every fixture domain is single-label, so the exception path is deliberately narrow.
+2. **Name + place key:** `name_norm` + geohash-7. This is a cheap **blocking key, not a guarantee** — two points 15 m apart can fall in adjacent cells (`9vk11mq` vs `9vk11mw`), so this rule alone misses them and rule 3 is the real safety net. Don't widen it with neighbour-cell lookups; rule 3 already covers the gap.
+3. **Fuzzy:** Jaro-Winkler ≥ 0.92 on `name_norm` within 200 m. (The plan's "same name within 150 m" refers to this rule's window, which is 200 m.)
+
+Rule 3 needs a spatial blocking grid to avoid a cross join. **State the invariant, not the constant: a grid cell must be wider than the 200 m window** so a ±1-cell neighbour scan cannot miss a qualifying pair. A cell size fixed in *degrees* satisfies this only up to a latitude — 0.005° of longitude is ~482 m at 30°N but only ~178 m at 71°N, where a qualifying pair two cells apart would be silently missed. Either widen the longitude scan by `ceil(200 m / cellMetres(lat))`, or assert the invariant so a future northern territory fails loudly instead of quietly under-merging.
 
 Keep the highest-confidence record as the lead. Mark the others `duplicate` and keep their source records.
+
+**Dedupe is transitive:** if A matches B by domain and B matches C by name, all three collapse into one group. Treat the matches as edges and take connected components — pairwise handling would make the result depend on row order, so the same input could yield different leads on a re-run, breaking idempotency (NFR-3).
 
 ### 7.3 Suppression
 A lead is suppressed if any suppression row matches by **domain**, by **exact `name_norm`** (with the same ZIP when the row has one), or by **fuzzy name ≥ 0.92 with the same ZIP**. Store the reason and the matching row id. Dealers and competitors are suppression reasons like any other.

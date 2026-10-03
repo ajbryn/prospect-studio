@@ -34,4 +34,21 @@ public interface ICampaignStore
         DateTimeOffset? profileSavedAt,
         DateTimeOffset updatedAt,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Stores the resolved search scope as the campaign's <c>geo_json</c>, which is where
+    /// <c>get_campaign.geoLabel</c> is read from. <c>find_candidates</c> is the first writer (C4).
+    /// False when the campaign is gone.
+    /// </summary>
+    Task<bool> SaveGeographyAsync(
+        string campaignId,
+        string? geoJson,
+        DateTimeOffset updatedAt,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The campaign's lead counts for <c>get_campaign</c>. Empty groupings rather than absent ones, and
+    /// grouped on real columns rather than inside JSON (CLAUDE.md §Conventions).
+    /// </summary>
+    Task<CampaignCounts> GetCountsAsync(string campaignId, CancellationToken cancellationToken);
 }

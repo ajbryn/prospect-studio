@@ -16,6 +16,12 @@ internal static class RepoFixtures
 
     public static string SampleSearchProfile => Fixture("sample-search-profile.json");
 
+    /// <summary>
+    /// The 113 synthetic Overture-like places around Houston, in the real Overture column shapes.
+    /// <c>src/tests/Fixtures/places/README.md</c> says which row proves which property.
+    /// </summary>
+    public static string SamplePlacesCsv => Fixture("sample-places.csv");
+
     public static string SearchProfileSchema => Schema("search-profile.schema.json");
 
     /// <summary>
@@ -46,9 +52,30 @@ internal static class RepoFixtures
 
     public static string ZctaCountyTextSource => GeoFixture("sources", "tab20_zcta520_county20_natl.txt");
 
+    /// <summary>
+    /// The sample places as Parquet, in the real Overture Places schema with <c>OGC:CRS84</c> geometry.
+    /// Generated from <see cref="SamplePlacesCsv"/> by
+    /// <c>src/tests/Fixtures/places/build-places-fixture.cs</c>.
+    /// </summary>
+    public static string SamplePlacesParquet => PlacesFixture("sample_places.parquet");
+
+    /// <summary>
+    /// The real <c>(taxonomy.primary, basic_category, hierarchy)</c> triples and Texas row counts for
+    /// every category the fixtures use, read off Overture release <c>2026-09-23.1</c>. It exists so a
+    /// test can prove no invented category has crept back into the fixtures or the sample profile.
+    /// </summary>
+    public static string TexasTaxonomyCsv => PlacesFixture("tx_taxonomy_primary.csv");
+
+    /// <summary>A recorded <c>https://stac.overturemaps.org/catalog.json</c> response.</summary>
+    public static string OvertureStacCatalogJson => PlacesFixture("stac-catalog.json");
+
     /// <summary>A path under <c>src/tests/Fixtures/geo</c>, checked so a broken content copy is obvious.</summary>
     public static string GeoFixture(params string[] parts) =>
         Existing(Path.Combine(TestFixturesDirectory, "geo"), "src/tests/Fixtures/geo", parts);
+
+    /// <summary>A path under <c>src/tests/Fixtures/places</c>.</summary>
+    public static string PlacesFixture(params string[] parts) =>
+        Existing(Path.Combine(TestFixturesDirectory, "places"), "src/tests/Fixtures/places", parts);
 
     /// <summary>A path under <c>poc/fixtures</c>, checked so a broken content copy is obvious.</summary>
     public static string Fixture(params string[] parts) => Existing(FixturesDirectory, "poc/fixtures", parts);

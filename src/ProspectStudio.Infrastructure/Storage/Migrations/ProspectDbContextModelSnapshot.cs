@@ -87,6 +87,41 @@ namespace ProspectStudio.Infrastructure.Storage.Migrations
                     b.ToTable("campaigns", (string)null);
                 });
 
+            modelBuilder.Entity("ProspectStudio.Core.Domain.Company", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Domain")
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("domain");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("name");
+
+                    b.Property<string>("NameNorm")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("name_norm");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Domain")
+                        .HasDatabaseName("ix_companies_domain");
+
+                    b.HasIndex("NameNorm")
+                        .HasDatabaseName("ix_companies_name_norm");
+
+                    b.ToTable("companies", (string)null);
+                });
+
             modelBuilder.Entity("ProspectStudio.Core.Domain.Job", b =>
                 {
                     b.Property<string>("Id")
@@ -149,6 +184,255 @@ namespace ProspectStudio.Infrastructure.Storage.Migrations
                         .HasDatabaseName("ix_jobs_campaign_status");
 
                     b.ToTable("jobs", (string)null);
+                });
+
+            modelBuilder.Entity("ProspectStudio.Core.Domain.Lead", b =>
+                {
+                    b.Property<string>("CampaignId")
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("campaign_id");
+
+                    b.Property<string>("Id")
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Assignment")
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("assignment");
+
+                    b.Property<string>("BranchId")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("branch_id");
+
+                    b.Property<string>("DealerId")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("dealer_id");
+
+                    b.Property<string>("SiteId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("site_id");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("status");
+
+                    b.Property<string>("SuppressionReason")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("suppression_reason");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("CampaignId", "Id");
+
+                    b.HasIndex("SiteId");
+
+                    b.HasIndex("CampaignId", "SiteId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_leads_campaign_site");
+
+                    b.HasIndex("CampaignId", "Status")
+                        .HasDatabaseName("ix_leads_campaign_status");
+
+                    b.ToTable("leads", (string)null);
+                });
+
+            modelBuilder.Entity("ProspectStudio.Core.Domain.Site", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("address");
+
+                    b.Property<string>("BasicCategory")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("basic_category");
+
+                    b.Property<string>("City")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("city");
+
+                    b.Property<string>("CompanyId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("company_id");
+
+                    b.Property<double>("Confidence")
+                        .HasColumnType("REAL")
+                        .HasColumnName("confidence");
+
+                    b.Property<string>("CountyFips")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("county_fips");
+
+                    b.Property<double>("Lat")
+                        .HasColumnType("REAL")
+                        .HasColumnName("lat");
+
+                    b.Property<double>("Lon")
+                        .HasColumnType("REAL")
+                        .HasColumnName("lon");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("name");
+
+                    b.Property<string>("OvertureId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("overture_id");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("phone");
+
+                    b.Property<string>("Release")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("release");
+
+                    b.Property<string>("State")
+                        .HasMaxLength(2)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("state");
+
+                    b.Property<string>("TaxonomyPath")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("taxonomy_path");
+
+                    b.Property<string>("TaxonomyPrimary")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("taxonomy_primary");
+
+                    b.Property<string>("Website")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("website");
+
+                    b.Property<string>("Zip")
+                        .HasMaxLength(5)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("zip");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("CountyFips")
+                        .HasDatabaseName("ix_sites_county_fips");
+
+                    b.HasIndex("OvertureId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_sites_overture_id");
+
+                    b.ToTable("sites", (string)null);
+                });
+
+            modelBuilder.Entity("ProspectStudio.Core.Domain.SourceRecord", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("License")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("license");
+
+                    b.Property<string>("PayloadJson")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("payload_json");
+
+                    b.Property<DateTime>("RetrievedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("retrieved_at");
+
+                    b.Property<string>("SiteId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("site_id");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("source");
+
+                    b.Property<string>("SourceId")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("source_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SiteId", "Source")
+                        .HasDatabaseName("ix_source_records_site");
+
+                    b.ToTable("source_records", (string)null);
+                });
+
+            modelBuilder.Entity("ProspectStudio.Core.Domain.Lead", b =>
+                {
+                    b.HasOne("ProspectStudio.Core.Domain.Campaign", null)
+                        .WithMany()
+                        .HasForeignKey("CampaignId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ProspectStudio.Core.Domain.Site", null)
+                        .WithMany()
+                        .HasForeignKey("SiteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ProspectStudio.Core.Domain.Site", b =>
+                {
+                    b.HasOne("ProspectStudio.Core.Domain.Company", null)
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ProspectStudio.Core.Domain.SourceRecord", b =>
+                {
+                    b.HasOne("ProspectStudio.Core.Domain.Site", null)
+                        .WithMany()
+                        .HasForeignKey("SiteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }
