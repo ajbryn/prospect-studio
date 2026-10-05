@@ -207,12 +207,14 @@ public interface ICandidateStore
     Task<IReadOnlyList<StoredLead>> ListLeadsAsync(string campaignId, CancellationToken cancellationToken);
 
     /// <summary>
-    /// The lead id for each of <paramref name="overtureIds"/> that the campaign holds, keyed by
-    /// Overture id. It exists so a ten-row sample does not have to read five thousand leads.
+    /// The <paramref name="limit"/> highest-confidence leads still at status <c>candidate</c>, as the
+    /// compact rows <c>find_candidates</c> shows. It is a <c>LIMIT</c> query so a ten-row sample does
+    /// not read five thousand leads, and it reads the stored status so a suppressed company - or a
+    /// duplicate - is never offered as an example (mcp-tools.md §find_candidates).
     /// </summary>
-    Task<IReadOnlyDictionary<string, string>> FindLeadIdsAsync(
+    Task<IReadOnlyList<CandidateSample>> SampleCandidatesAsync(
         string campaignId,
-        IReadOnlyList<string> overtureIds,
+        int limit,
         CancellationToken cancellationToken);
 
     /// <summary>

@@ -3,7 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using ProspectStudio.Core.Campaigns;
 using ProspectStudio.Core.Candidates;
+using ProspectStudio.Core.Configuration;
+using ProspectStudio.Core.Dealers;
 using ProspectStudio.Core.Jobs;
+using ProspectStudio.Infrastructure.Lists;
 
 namespace ProspectStudio.Infrastructure.Storage;
 
@@ -33,6 +36,25 @@ public static class StorageServiceCollectionExtensions
         services.AddSingleton<ICampaignStore, EfCampaignStore>();
         services.AddSingleton<IJobStore, EfJobStore>();
         services.AddSingleton<ICandidateStore, EfCandidateStore>();
+        services.AddSingleton<IDealerStore, EfDealerStore>();
+        services.AddSingleton<ILeadRoutingStore, EfLeadRoutingStore>();
+        services.AddSingleton<IListImporter, ListImporter>();
+        return services;
+    }
+
+    /// <summary>
+    /// Registers <c>import_list</c>'s workspace default: the <c>Dealers\</c> and <c>Suppression\</c>
+    /// folders under <paramref name="options"/>'s home (technical-design §5.1). Separate from
+    /// <see cref="AddProspectStudioStorage"/> because the importer itself needs only the database,
+    /// which is all a storage test has.
+    /// </summary>
+    public static IServiceCollection AddProspectStudioLists(this IServiceCollection services, PsOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(options);
+
+        services.AddSingleton<IListFileLocator>(new WorkspaceListFiles(options.Home));
+        services.AddSingleton<ListImportService>();
         return services;
     }
 }

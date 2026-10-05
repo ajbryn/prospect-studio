@@ -26,13 +26,13 @@ public sealed class LookupTools(NaicsLookupService naics, GeographyService geogr
         ToolResults.Ok(await naics.LookupAsync(query, limit, cancellationToken).ConfigureAwait(false));
 
     [McpServerTool(Name = "resolve_geography")]
-    [Description("Turns a place into a search scope: a state, a list of counties, a metro area (CBSA), a list of ZIP codes, or a radius around a point or address. Returns the counties, states, ZIPs and bounding box it resolved to, plus alternatives when the name is ambiguous. Needs reference data, so run prepare_data first.")]
+    [Description("Turns a place into a search scope: a state, a list of counties, a metro area (CBSA), a list of ZIP codes, a radius around a point or address, or an imported dealer's territory. Returns the counties, states, ZIPs and bounding box it resolved to, plus alternatives when the name is ambiguous. Needs reference data, so run prepare_data first.")]
     public async ValueTask<CallToolResult> ResolveGeographyAsync(
         [Description("A place name such as 'Houston metro', 'Harris County, TX' or 'Texas'. Use this when you do not know which kind of place it is.")]
         string? query = null,
-        [Description("The kind of scope to resolve: state, counties, cbsa, zips or radius.")]
+        [Description("The kind of scope to resolve: state, counties, cbsa, zips, radius or dealer.")]
         string? type = null,
-        [Description("The places for that type, as a JSON array of strings: [\"Harris County, TX\"] or [\"77494\", \"77449\"].")]
+        [Description("The places for that type, as a JSON array of strings: [\"Harris County, TX\"], [\"77494\", \"77449\"] or, for type dealer, a dealer id such as [\"gulf\"].")]
         string[]? values = null,
         [Description("The centre of a radius scope: either lat and lon, or a one-line address to geocode.")]
         GeoCenter? center = null,
@@ -59,7 +59,8 @@ public sealed class LookupTools(NaicsLookupService naics, GeographyService geogr
             throw new McpToolException(
                 ToolErrorCodes.NotFound,
                 exception.Message,
-                "Try a more specific form, such as 'Harris County, TX', 'Houston metro' or a ZIP code.");
+                exception.Hint
+                ?? "Try a more specific form, such as 'Harris County, TX', 'Houston metro' or a ZIP code.");
         }
         catch (GeographyRequestException exception)
         {
@@ -73,7 +74,7 @@ public sealed class LookupTools(NaicsLookupService naics, GeographyService geogr
             throw new McpToolException(
                 ToolErrorCodes.Unsupported,
                 exception.Message,
-                "Dealer territories arrive in chunk C5; resolve the dealer's counties or ZIPs instead.");
+                "Resolve the dealer's counties or ZIPs instead.");
         }
         catch (GeographyExternalException exception)
         {

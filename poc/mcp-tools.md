@@ -206,9 +206,15 @@ Other contract-shaping facts, all verified against the live API:
 ## Lists
 
 ### `import_list`
-Input: `{ "kind": "dealers" | "territories" | "suppression" | "warranty", "path": "optional; defaults to the workspace folder file", "reason": "customer" }`
-Output: `{ "imported": 64, "updated": 0, "errors": [ { "row": 12, "message": "Unknown dealerId 'gulff'" } ] }`
+Input: `{ "kind": "dealers" | "territories" | "suppression" | "warranty", "path": "optional; defaults to the workspace folder file", "reason": "customer", "replace": false }`
+Output: `{ "imported": 64, "updated": 0, "errors": [ { "row": 12, "message": "Unknown dealerId 'gulff'" } ] }`, plus `removed` and `errorCount` **when non-zero** — omitted at zero, the same convention as `details[]` on errors, so a clean import keeps exactly the three documented keys.
 Formats: see `poc/fixtures/*.csv` headers. XLSX accepted with the same headers on the first sheet.
+
+- **`row` is the spreadsheet row**, counting the header as 1 — so the first data row is 2. That is what a user staring at the file sees.
+- A row error **does not abandon the import**: the remaining rows still load, and `errors[]` is capped (~50) with the true total in `errorCount`, so a badly broken file cannot blow the compact-output rule.
+- Import is **upsert-only by default, and `removed` is how you see what that cost you.** `replace: true` makes the file authoritative and deletes rows it no longer names. The default is deliberate for suppression: a stale entry over-suppresses and costs one lead, whereas dropping a stale `dnc` row risks contacting someone who asked not to be — over-suppression is the safe direction. An unchanged file reports `imported: 0, removed: 0` even with `replace: true`, so a re-run never looks like a change.
+- `kind: "warranty"` is **`UNSUPPORTED`** until C13, checked before the path is resolved so a missing file cannot mask it as `NOT_FOUND`.
+- A named file that does not exist is **`NOT_FOUND`** with the path in the hint. If `path` is omitted and the folder holds several candidates, that is `VALIDATION_FAILED` asking which — never a silent pick.
 
 ### `list_dealers`
 Output: `{ "dealers": [ { "id": "gulf", "name": "Gulf Lift Equipment", "branches": 1, "territoryRows": 30 } ] }`
@@ -226,12 +232,20 @@ Output:
 Re-running with the same inputs is idempotent. `replace: true` clears candidates without research first.
 
 - **Exclusions come from the saved search profile** (`exclusions.overtureCategories` and `exclusions.keywords`) and are applied here — §6.3's SQL omitted them and this input list never mentioned them, which left the only consumer of a declared profile field undefined. An optional `excludedCategories` parameter overrides the profile's, the same way `categories` and `keywords` do.
-- **`found` = `stored` + `duplicates`**, matching the example's own arithmetic (2890 + 230 = 3120). `suppressed` counts are reported separately per reason and are **not** part of `stored`.
+- **`found` = `stored` + `duplicates`**, matching the example's own arithmetic (2890 + 230 = 3120). **Suppressed leads *are* stored rows** — they are stored with `status = "suppressed"`, and `suppressed` simply reports the counts by reason, which is why the example can show 19 suppressed inside 2890 stored. (An earlier version of this bullet said suppressed rows were not part of `stored`; that contradicted both the formula and the example.)
+- **A suppressed lead carries no dealer** — its dealer columns stay null and it appears in neither `byDealer` nor `coverageGaps`. This keeps assignment and suppression **order-independent**, so `find_candidates` and a skill calling `assign_dealers`/`apply_suppression` in either order reach the same final state.
+- **With no territories imported, every lead is a coverage gap** rather than silently reporting zero. "0 gaps" with nothing routed would read as success; the honest answer tells the user to import their territories.
 - The first address, website and phone are taken from their lists; a ZIP+4 postcode is truncated to 5 digits; a phone is stored **verbatim** (formats are inconsistent — `7137477411`, `17136884530` — and normalization is not needed until matching in C13).
 - `get_campaign.geoLabel` starts being populated here, because this is the first tool to write the campaign's `geo_json`. `get_status.ready.overture` likewise reports the real release and extracted states from C4 onward, rather than the hardcoded `{release: null, states: []}` placeholder C0 shipped.
 
 ### `assign_dealers` / `apply_suppression`
-Input: `{ "campaignId": "..." }` → counts changed. Manual overrides are preserved.
+Input: `{ "campaignId": "..." }` → `{ "changed": 0, "overrides": 0, ... }`. `changed` is 0 on a re-run; `overrides` reports what the run deliberately left alone.
+
+**Manual overrides are preserved by both tools** — `assignment = "override"` is never cleared, including by suppression. A suppressed lead with an override keeps its dealer, so the two tools reach the same final state in either order.
+
+**Releasing is the mirror of suppressing.** When the list no longer names a lead, `apply_suppression` restores the status it was suppressed *from* (recorded in `leads.pre_suppression_status`), not a blanket `candidate` — otherwise adding a `dnc` row and removing it again would silently discard a human approval. **`decisionsRestored`** counts releases back to `approved`/`review`/`hold`/`rejected`; ordinary releases to `candidate` are not counted. A lead that is already suppressed keeps what it is remembering, so a re-run cannot overwrite the original status one pass later.
+
+**`apply_suppression` applies regardless of status** (it skips only `duplicate`). A `dnc` row arriving *after* the marketer approved a company is exactly when suppression matters, so an approved lead *is* suppressed — and **`approvedSuppressed`** reports that count separately, because the user's mailing list just shrank and a figure buried in a total would go unnoticed.
 
 ## Leads
 
@@ -354,7 +368,7 @@ Output: `{ "matches": { "exact": 1, "strong": 2, "fuzzy": 3 }, "byCohort": [ { "
 | Code | When | Hint example |
 |---|---|---|
 | `NOT_READY` | Setup or prerequisite missing (data, codes, profile) | "Run prepare_data for TX first." |
-| `NOT_FOUND` | Unknown campaign/lead/template/job | "Use list_campaigns." |
+| `NOT_FOUND` | Unknown campaign/lead/template/job, **or a file the caller named that is not there** | "Use list_campaigns." / "No file at `<path>`." |
 | `VALIDATION_FAILED` | Schema or rule violation; include `details[]` | "signals[1].url is required." |
 | `CONFLICT` | Locked cohorts, duplicate names, override conflicts | "Pass force=true to reassign." |
 | `FILE_LOCKED` | Workbook or output file open in another app | "Close leads.xlsx in Excel." |

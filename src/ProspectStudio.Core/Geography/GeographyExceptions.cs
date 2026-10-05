@@ -11,7 +11,14 @@ public sealed class GeographyNotReadyException(string message, string? hint = nu
 }
 
 /// <summary>Nothing matched, which the tool reports as <c>NOT_FOUND</c>.</summary>
-public sealed class GeographyNotFoundException(string message) : Exception(message);
+/// <remarks>
+/// <paramref name="hint"/> overrides the tool's default "try a more specific place name", because what
+/// the user should do next is not always to rephrase: an unknown dealer id wants <c>list_dealers</c>.
+/// </remarks>
+public sealed class GeographyNotFoundException(string message, string? hint = null) : Exception(message)
+{
+    public string? Hint { get; } = hint;
+}
 
 /// <summary>The request made no sense, which the tool reports as <c>VALIDATION_FAILED</c>.</summary>
 public sealed class GeographyRequestException(string message) : Exception(message);

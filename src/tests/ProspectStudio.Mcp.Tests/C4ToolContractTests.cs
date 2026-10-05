@@ -105,10 +105,14 @@ public class C4ToolContractTests(CandidateServerFixture server)
             JsonValueKind.Object,
             "an object with no reasons yet - suppression is C5. An absent key would make a skill unable "
             + "to tell 'nothing suppressed' from 'this server does not do suppression'.");
-        summary.GetProperty("byDealer").ValueKind.ShouldBe(
-            JsonValueKind.Array,
-            "empty until C5 assigns dealers, but present.");
-        summary.GetProperty("coverageGaps").GetInt32().ShouldBe(0, "territories arrive in C5.");
+        summary.GetProperty("byDealer").EnumerateArray().ShouldBeEmpty(
+            "this server has no dealers imported, so there is nobody to route to - but the key is "
+            + "present, because an absent key reads differently from an empty one.");
+        summary.GetProperty("coverageGaps").GetInt32().ShouldBe(
+            summary.GetProperty("stored").GetInt32(),
+            "with no territories imported, §7.4 matches nothing and every lead is a coverage gap. That "
+            + "is the honest answer and it tells a skill exactly what is missing; reporting 0 would read "
+            + "as 'all routed'. The server with the lists imported is covered by C5ToolContractTests.");
     }
 
     [Fact]
@@ -131,21 +135,21 @@ public class C4ToolContractTests(CandidateServerFixture server)
     {
         var summary = await FindAsync(server.CampaignId);
 
-        // 112 fixture rows sit in the ten Houston counties. 84 match the profile's categories or
+        // 117 fixture rows sit in the ten Houston counties. 89 match the profile's categories or
         // keywords at confidence >= 0.6. Two of those go to excluded categories (fx_0075, a restaurant
         // caught by the keyword 'warehouse', and fx_0114) and one to an excluded keyword (fx_0115),
-        // leaving 81; dedupe then collapses three duplicates into their primaries, leaving 78 leads.
+        // leaving 86; dedupe then collapses three duplicates into their primaries, leaving 83 leads.
         // src/tests/Fixtures/places/README.md carries the same arithmetic row by row.
         summary.GetProperty("duplicates").GetInt32().ShouldBe(
             3,
             $"fx_0013 (domain), fx_0014 (name within 15 m) and fx_0113 (name in the same geohash cell). Got: {summary}");
         summary.GetProperty("stored").GetInt32().ShouldBe(
-            78,
-            "see src/tests/Fixtures/places/README.md for the arithmetic: 112 rows in the ten counties, "
-            + "84 match on category or keyword at confidence >= 0.6, two go to excluded categories "
-            + "(fx_0075, fx_0114) and one to an excluded keyword (fx_0115), leaving 81; dedupe then "
-            + "collapses three. If this is 79 or 80 an exclusion list was skipped; if it is 81 dedupe "
-            + $"did not run; if it is 112 or 115 the county or confidence filter did not. Got: {summary}");
+            83,
+            "see src/tests/Fixtures/places/README.md for the arithmetic: 117 rows in the ten counties, "
+            + "89 match on category or keyword at confidence >= 0.6, two go to excluded categories "
+            + "(fx_0075, fx_0114) and one to an excluded keyword (fx_0115), leaving 86; dedupe then "
+            + "collapses three. If this is 84 or 85 an exclusion list was skipped; if it is 86 dedupe "
+            + $"did not run; if it is 117 or 120 the county or confidence filter did not. Got: {summary}");
     }
 
     [Fact]
@@ -159,15 +163,17 @@ public class C4ToolContractTests(CandidateServerFixture server)
                 row => row.GetProperty("count").GetInt32(),
                 StringComparer.Ordinal);
 
-        // Counted over the 78 STORED leads, so the three duplicates are not counted twice:
-        // 'warehouse' holds 17 rows in scope and loses fx_0013 and fx_0113, 'metal_fabricator' loses
+        // Counted over the 83 STORED leads, so the three duplicates are not counted twice:
+        // 'warehouse' holds 18 rows in scope and loses fx_0013 and fx_0113, 'metal_fabricator' loses
         // fx_0014. fx_0012 and fx_0111 are counted here because they were re-categorised from
         // storage_facility to warehouse - see the README note on why the profile cannot name
-        // storage_facility.
-        byCategory.ShouldContainKeyAndValue("warehouse", 15);
-        byCategory.ShouldContainKeyAndValue("industrial_equipment_manufacturer", 3);
+        // storage_facility. C5 added five rows: fx_0116 (metal_fabricator), fx_0117 (warehouse),
+        // fx_0118 (industrial_equipment_manufacturer) and fx_0119/fx_0120 (freight_and_cargo_service).
+        byCategory.ShouldContainKeyAndValue("warehouse", 16);
+        byCategory.ShouldContainKeyAndValue("industrial_equipment_manufacturer", 4);
         byCategory.ShouldContainKeyAndValue("electrician", 8);
-        byCategory.ShouldContainKeyAndValue("metal_fabricator", 6);
+        byCategory.ShouldContainKeyAndValue("metal_fabricator", 7);
+        byCategory.ShouldContainKeyAndValue("freight_and_cargo_service", 8);
         byCategory.ShouldContainKeyAndValue(
             "steel_fabricator",
             1,
@@ -334,9 +340,9 @@ public class C4ToolContractTests(CandidateServerFixture server)
         var stored = summary.GetProperty("stored").GetInt32();
 
         stored.ShouldBe(
-            7,
-            "Montgomery County 48339 holds nine fixture rows; eight match the profile at confidence "
-            + ">= 0.6, and one of those (fx_0113) is a duplicate of fx_0025, leaving seven leads. A "
+            8,
+            "Montgomery County 48339 holds ten fixture rows; nine match the profile at confidence "
+            + ">= 0.6, and one of those (fx_0113) is a duplicate of fx_0025, leaving eight leads. A "
             + $"one-county scope must not quietly fall back to the profile's ten. Got: {summary}");
 
         summary.GetProperty("duplicates").GetInt32().ShouldBe(
@@ -385,8 +391,11 @@ public class C4ToolContractTests(CandidateServerFixture server)
 
         warehouse.ValueKind.ShouldBe(
             JsonValueKind.Object,
-            $"'warehouse' is a real Overture category and the fixture holds 17 of them. Got: {payload}");
-        warehouse.GetProperty("countInState").GetInt32().ShouldBe(19);
+            $"'warehouse' is a real Overture category and the fixture holds 20 of them. Got: {payload}");
+        warehouse.GetProperty("countInState").GetInt32().ShouldBe(
+            20,
+            "C5 added fx_0117 'Northfield Storage Co.', the only row §7.3's exact-name suppression rule "
+            + "can reach.");
         warehouse.GetProperty("path").EnumerateArray().Select(value => value.GetString()).Last()
             .ShouldBe("warehouse", "the path is the hierarchy, root first, leaf last.");
     }

@@ -284,7 +284,7 @@ public class DuckDbPlacesSourceTests
 
         var place = (await FindAsync(environment, Query())).Single(found => found.Id == "fx_0029");
 
-        place.Websites.ShouldBeEmpty("23 of the 113 fixture rows have no website, as the real data does.");
+        place.Websites.ShouldBeEmpty("23 of the 120 fixture rows have no website, as the real data does.");
     }
 
     [Fact]
@@ -330,9 +330,10 @@ public class DuckDbPlacesSourceTests
         var warehouse = counts.SingleOrDefault(count => count.Category == "warehouse")
             .ShouldNotBeNull($"'warehouse' must be among the results: {string.Join(", ", counts.Select(count => count.Category))}");
         warehouse.CountInState.ShouldBe(
-            19,
-            "the 19 'warehouse' rows in the extract, counted on taxonomy.primary - the same way the "
-            + "real 960 Texas rows were counted.");
+            20,
+            "the 20 'warehouse' rows in the extract, counted on taxonomy.primary - the same way the "
+            + "real 960 Texas rows were counted. C5 added fx_0117 'Northfield Storage Co.', which is "
+            + "the only row §7.3's exact-name suppression rule can reach.");
         warehouse.Path.ToList().ShouldBe(
             ["services_and_business", "b2b_service", "b2b_transportation_and_storage_service", "b2b_storage", "warehouse"],
             "mcp-tools.md §lookup_overture_categories returns the hierarchy as 'path'.");
@@ -347,7 +348,7 @@ public class DuckDbPlacesSourceTests
 
         counts.Count.ShouldBe(3);
         counts.Select(count => count.CountInState).ShouldBeInOrder(SortDirection.Descending);
-        counts[0].Category.ShouldBe("warehouse", "19 rows, the commonest in the fixture.");
+        counts[0].Category.ShouldBe("warehouse", "20 rows, the commonest in the fixture.");
     }
 
     [Fact]

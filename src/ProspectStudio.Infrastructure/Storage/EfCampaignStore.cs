@@ -145,10 +145,16 @@ public sealed class EfCampaignStore(IDbContextFactory<ProspectDbContext> context
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        // byTier and byDealer stay empty until scoring (C6) and dealer assignment (C5) fill them.
+        // The same query find_candidates' byDealer uses, so the two breakdowns cannot drift apart.
+        var byDealer = await EfLeadRoutingStore
+            .LeadCountsByDealer(context, campaignId)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        // byTier stays empty until scoring fills it (C6).
         return new CampaignCounts(
             byStatus.ToDictionary(row => row.Status, row => row.Leads, StringComparer.Ordinal),
             new Dictionary<string, int>(StringComparer.Ordinal),
-            []);
+            byDealer);
     }
 }

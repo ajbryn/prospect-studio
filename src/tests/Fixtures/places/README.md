@@ -10,7 +10,7 @@ dotnet run build-places-fixture.cs      # rebuilds sample_places.parquet from po
 
 | File | What |
 |---|---|
-| `sample_places.parquet` | 115 places in the real Overture Places schema, built from [`poc/fixtures/sample-places.csv`](../../../../poc/fixtures/sample-places.csv) |
+| `sample_places.parquet` | 120 places in the real Overture Places schema, built from [`poc/fixtures/sample-places.csv`](../../../../poc/fixtures/sample-places.csv) |
 | `build-places-fixture.cs` | The committed DuckDB builder (a .NET 10 file-based app) |
 | `tx_taxonomy_primary.csv` | The **real** `(taxonomy.primary, basic_category, hierarchy)` triples and Texas row counts for every category the fixtures and `sample-search-profile.json` use, read off release `2026-09-23.1`. `PlacesFixtureIntegrityTests` checks every fixture category against it, so an invented value cannot creep back in |
 | `stac-catalog.json` | A recorded `https://stac.overturemaps.org/catalog.json` response, for the release-discovery test |
@@ -53,22 +53,29 @@ test pass while the real query threw.
 
 ## Facts the tests rely on
 
-- **115 rows**: 112 inside the ten Houston CBSA counties, **3 in Jefferson County 48245** (Beaumont),
-  which is in CBSA 13140 and must be excluded by a Houston scope.
+- **120 rows**: 117 inside the ten Houston CBSA counties, **3 in Jefferson County 48245** (Beaumont),
+  which is in CBSA 13140 and must be excluded by a Houston scope. Five were added in **C5** — see the
+  table below.
 - Every row's point falls inside the `county_fips` it declares, checked against the committed
   simplified county geometry. Ten of the original jittered points did not and were **moved** (the
   rule in `poc/fixtures/README.md` is to move the point, not the expectation).
-- Counties present: 48015 ×3, 48039 ×3, 48071 ×9, 48157 ×12, 48167 ×5, 48201 ×68, 48339 ×9,
-  48473 ×3, 48245 ×3. There is nothing in Liberty 48291 or San Jacinto 48407.
-- With `sample-search-profile.json` (ten-county Houston scope, `minConfidence` 0.6, its 14 categories
-  and 17 keywords): **84** rows match on category or keyword; the profile's
+- Counties present: 48015 ×3, 48039 ×3, 48071 ×9, 48157 ×12, 48167 ×5, 48201 ×71, 48339 ×10,
+  **48407 ×1**, 48473 ×3, 48245 ×3. There is nothing in Liberty 48291. San Jacinto 48407 holds exactly
+  one row, added in C5: it is the only Houston CBSA county `territories.csv` does not cover, so it is
+  the only place a lead can reach `assignment=gap`.
+- With `sample-search-profile.json` (ten-county Houston scope, `minConfidence` 0.6, its categories
+  and 17 keywords): **89** rows match on category or keyword; the profile's
   `exclusions.overtureCategories` drops two (`fx_0075`, `fx_0114`) and its `exclusions.keywords` drops
-  one (`fx_0115`), leaving **81**; dedupe then collapses three duplicates, leaving **78** leads.
-- `byCategory` over those 78 leads: `warehouse` 15, `electrician` 8, `distribution_service` 7,
-  `metal_fabricator` 6, `manufacturer` 6, `hvac_service` 6, `freight_and_cargo_service` 6,
+  one (`fx_0115`), leaving **86**; dedupe then collapses three duplicates, leaving **83** leads.
+- `byCategory` over those 83 leads: `warehouse` 16, `electrician` 8, `freight_and_cargo_service` 8,
+  `distribution_service` 7, `metal_fabricator` 7, `manufacturer` 6, `hvac_service` 6,
   `property_management` 5, `sign_making` 5, `glass_and_mirror_sales_service` 4,
-  `industrial_equipment_manufacturer` 3, `contractor` 2, `machine_shop` 2, `motor_freight_trucking` 2,
+  `industrial_equipment_manufacturer` 4, `contractor` 2, `machine_shop` 2, `motor_freight_trucking` 2,
   `steel_fabricator` 1.
+- **C5 routing and suppression** over those 83 leads: §7.3 suppresses **7** (`dealer` 3, `customer` 2,
+  `dnc` 1, `competitor` 1), leaving **76** candidates; §7.4 routes **75** of them — `gulf` 32, `bay` 24,
+  `pine` 19 — and flags **1** coverage gap. 27 of the 86 surviving rows are routed by a **ZIP override**
+  rather than by their county default.
 
 ## Why the profile cannot name `storage_facility`
 
@@ -119,6 +126,11 @@ self-storage, so both are now plain `warehouse`:
 | `fx_0112` | `The Waller County Industrial Park Facilities Management Company, LLC` — 68 characters for the postcard overflow checks, and `The …`/`Company, LLC` for the name normalizer |
 | `fx_0002` | `Gulf Coast Sign & Lighting` → `gulf coast sign and lighting`, the `&`→`and` normalizer case §7.1 names |
 | `fx_0081`–`fx_0100` | Noise in categories no segment asks for: `cafe`, `dental_clinic`, `beauty_salon`, `christian_place_of_worship`, `elementary_school`, `automotive_repair` |
+| `fx_0116` | **C5 · coverage gap.** `Coldspring Steel Works` in San Jacinto **48407**, the one Houston CBSA county `territories.csv` leaves uncovered, so `assignment=gap` has a subject. Before C5, 48407 held no row at all and the only uncovered county with rows was Jefferson 48245 — which a Houston scope filters out long before assignment runs, so the gap case could not have failed |
+| `fx_0117` | **C5 · suppression by exact `name_norm` + ZIP.** `Northfield Storage Co.` at **77060**, matching the `dnc` suppression row, which is the only row with **no domain**. Its own domain (`northfieldstorage.example`) is in no suppression row, so §7.3's name path is the only route — and `dnc` is otherwise a reason that could never appear in a result |
+| `fx_0118` | **C5 · the third dealer.** `Pineland Equipment` in Conroe, so all three dealers in `dealers.csv` can be proven suppressed rather than two |
+| `fx_0119` | **C5 · suppression by fuzzy name.** `Coastal Crane and Rigging Group` at **77029**: `coastal crane and rigging group` scores **0.9613** against the suppression row's `coastal crane and rigging` at the same ZIP. Not equal, and its domain matches nothing, so only §7.3's Jaro-Winkler rule can reach it. (`fx_0017`/`fx_0018` cannot do this job: their category `contractor` is in no segment, so they never become leads) |
+| `fx_0120` | **C5 · the negative control.** `Coastal Crane and Haul` at the same ZIP scores **0.9076** — above §7.9's 0.90 matchback threshold and below §7.3's 0.92 — so it must **not** be suppressed. It is the only row in the whole fixture between 0.80 and 0.92 against any suppression name, which `DealerFixtureIntegrityTests` asserts |
 
 **Transitive dedupe** (§7.2 now says matches are edges and groups are connected components) is tested
 with synthetic rows in `CandidateDedupeTests`, not with fixture rows: a three-row chain needs one
@@ -133,7 +145,7 @@ Each row whose job is to exercise a search path carries a machine-readable tag a
 
 | Tag | Means | Count |
 |---|---|---|
-| `[candidate]` | The profile selects it and its exclusions keep it, so it reaches the campaign | 26 |
+| `[candidate]` | The profile selects it and its exclusions keep it, so it reaches the campaign | 31 |
 | `[excluded]` | The profile selects it and then an exclusion list removes it | 3 |
 | `[unmatched]` | The profile must **not** select it — out of scope, below the confidence floor, or in no segment | 9 |
 

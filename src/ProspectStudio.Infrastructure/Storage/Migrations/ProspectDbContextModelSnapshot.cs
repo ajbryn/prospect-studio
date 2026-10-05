@@ -122,6 +122,103 @@ namespace ProspectStudio.Infrastructure.Storage.Migrations
                     b.ToTable("companies", (string)null);
                 });
 
+            modelBuilder.Entity("ProspectStudio.Core.Domain.Dealer", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("AlertEmail")
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("alert_email");
+
+                    b.Property<string>("LogoFile")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("logo_file");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Website")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("website");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("dealers", (string)null);
+                });
+
+            modelBuilder.Entity("ProspectStudio.Core.Domain.DealerBranch", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("address");
+
+                    b.Property<string>("City")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("city");
+
+                    b.Property<string>("DealerId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("dealer_id");
+
+                    b.Property<double>("Lat")
+                        .HasColumnType("REAL")
+                        .HasColumnName("lat");
+
+                    b.Property<double>("Lon")
+                        .HasColumnType("REAL")
+                        .HasColumnName("lon");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("phone");
+
+                    b.Property<string>("State")
+                        .HasMaxLength(2)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("state");
+
+                    b.Property<string>("TrackingPhone")
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("tracking_phone");
+
+                    b.Property<string>("Zip")
+                        .HasMaxLength(5)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("zip");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DealerId");
+
+                    b.ToTable("dealer_branches", (string)null);
+                });
+
             modelBuilder.Entity("ProspectStudio.Core.Domain.Job", b =>
                 {
                     b.Property<string>("Id")
@@ -213,6 +310,11 @@ namespace ProspectStudio.Infrastructure.Storage.Migrations
                         .HasColumnType("TEXT")
                         .HasColumnName("dealer_id");
 
+                    b.Property<string>("PreSuppressionStatus")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("pre_suppression_status");
+
                     b.Property<string>("SiteId")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -224,6 +326,11 @@ namespace ProspectStudio.Infrastructure.Storage.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("TEXT")
                         .HasColumnName("status");
+
+                    b.Property<string>("SuppressionId")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("suppression_id");
 
                     b.Property<string>("SuppressionReason")
                         .HasMaxLength(20)
@@ -402,6 +509,115 @@ namespace ProspectStudio.Infrastructure.Storage.Migrations
                     b.ToTable("source_records", (string)null);
                 });
 
+            modelBuilder.Entity("ProspectStudio.Core.Domain.SuppressionRow", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("AddressNorm")
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("address_norm");
+
+                    b.Property<string>("CompanyName")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("company_name");
+
+                    b.Property<string>("Domain")
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("domain");
+
+                    b.Property<string>("NameNorm")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("name_norm");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("reason");
+
+                    b.Property<string>("SourceFile")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("source_file");
+
+                    b.Property<string>("Zip")
+                        .HasMaxLength(5)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("zip");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Domain")
+                        .HasDatabaseName("ix_suppression_domain");
+
+                    b.HasIndex("NameNorm")
+                        .HasDatabaseName("ix_suppression_name_norm");
+
+                    b.ToTable("suppression", (string)null);
+                });
+
+            modelBuilder.Entity("ProspectStudio.Core.Domain.Territory", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("BranchId")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("branch_id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(5)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("code");
+
+                    b.Property<string>("DealerId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("dealer_id");
+
+                    b.Property<string>("Level")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("level");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("priority");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DealerId");
+
+                    b.HasIndex("Level", "Code")
+                        .HasDatabaseName("ix_territories_level_code");
+
+                    b.ToTable("territories", (string)null);
+                });
+
+            modelBuilder.Entity("ProspectStudio.Core.Domain.DealerBranch", b =>
+                {
+                    b.HasOne("ProspectStudio.Core.Domain.Dealer", null)
+                        .WithMany()
+                        .HasForeignKey("DealerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ProspectStudio.Core.Domain.Lead", b =>
                 {
                     b.HasOne("ProspectStudio.Core.Domain.Campaign", null)
@@ -431,6 +647,15 @@ namespace ProspectStudio.Infrastructure.Storage.Migrations
                     b.HasOne("ProspectStudio.Core.Domain.Site", null)
                         .WithMany()
                         .HasForeignKey("SiteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ProspectStudio.Core.Domain.Territory", b =>
+                {
+                    b.HasOne("ProspectStudio.Core.Domain.Dealer", null)
+                        .WithMany()
+                        .HasForeignKey("DealerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

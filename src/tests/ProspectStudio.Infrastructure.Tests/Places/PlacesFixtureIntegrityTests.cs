@@ -148,8 +148,8 @@ public class PlacesFixtureIntegrityTests
     [Fact]
     public void The_fixture_covers_the_Houston_metro_and_deliberately_overflows_into_Beaumont()
     {
-        SamplePlaces.All.Count.ShouldBe(115);
-        SamplePlaces.InHoustonCbsa.Count.ShouldBe(112);
+        SamplePlaces.All.Count.ShouldBe(120);
+        SamplePlaces.InHoustonCbsa.Count.ShouldBe(117);
 
         SamplePlaces.InJeffersonCounty.Select(place => place.Id).ToList().ShouldBe(
             ["fx_0101", "fx_0102", "fx_0103"],
@@ -161,7 +161,11 @@ public class PlacesFixtureIntegrityTests
             .Distinct()
             .Order(StringComparer.Ordinal)
             .ToList()
-            .ShouldBe(["48015", "48039", "48071", "48157", "48167", "48201", "48245", "48339", "48473"]);
+            .ShouldBe(
+                ["48015", "48039", "48071", "48157", "48167", "48201", "48245", "48339", "48407", "48473"],
+                "San Jacinto 48407 arrived in C5: it is the one Houston CBSA county territories.csv does "
+                + "not cover, so a lead there is the only one that can reach assignment=gap. Before C5 "
+                + "the county held no row at all and the gap case had no subject.");
     }
 
     [Fact]
@@ -308,6 +312,11 @@ public class PlacesFixtureIntegrityTests
                      ("fx_0013", "the domain-key duplicate"),
                      ("fx_0014", "the name-and-proximity duplicate"),
                      ("fx_0113", "the name-and-geohash duplicate"),
+                     ("fx_0116", "the only lead in a county with no territory, so assignment=gap can happen"),
+                     ("fx_0117", "the only lead §7.3's exact name_norm + ZIP rule can reach"),
+                     ("fx_0118", "the third dealer, so all three in dealers.csv can be proven suppressed"),
+                     ("fx_0119", "the only lead §7.3's Jaro-Winkler rule can reach"),
+                     ("fx_0120", "the negative control for the fuzzy rule, which must NOT be suppressed"),
                  })
         {
             FixtureTags.Of(SamplePlaces.Row(id)).ShouldBe(
@@ -327,9 +336,9 @@ public class PlacesFixtureIntegrityTests
         var selected = SamplePlaces.All.Where(profile.Selects).ToList();
         var surviving = selected.Where(place => !profile.IsExcluded(place)).ToList();
 
-        selected.Count.ShouldBe(84, "rows matching a category or keyword, in the ten counties, at confidence >= 0.6.");
-        surviving.Count.ShouldBe(81, "after exclusions.overtureCategories and exclusions.keywords.");
-        (surviving.Count - 3).ShouldBe(78, "three of those are duplicates, leaving the leads find_candidates stores.");
+        selected.Count.ShouldBe(89, "rows matching a category or keyword, in the ten counties, at confidence >= 0.6.");
+        surviving.Count.ShouldBe(86, "after exclusions.overtureCategories and exclusions.keywords.");
+        (surviving.Count - 3).ShouldBe(83, "three of those are duplicates, leaving the leads find_candidates stores.");
     }
 
     [Fact]
@@ -339,7 +348,10 @@ public class PlacesFixtureIntegrityTests
         // the sample profile excludes. A profile-driven search therefore never surfaced them, so C5's
         // dealer and competitor suppression would have had nothing to suppress and its test could not
         // have failed. A fixture that quietly guarantees a green test is worse than no fixture.
-        string[] targets = ["fx_0015", "fx_0016", "fx_0020"];
+        // C5 added fx_0117 (the dnc row), fx_0118 (the third dealer) and fx_0119 (the fuzzy subject)
+        // for the same reason, plus fx_0120 as the negative control - which also has to be searchable,
+        // or "it was not suppressed" would be true because it was never a lead.
+        string[] targets = ["fx_0015", "fx_0016", "fx_0020", "fx_0117", "fx_0118", "fx_0119", "fx_0120"];
         var profileCategories = ProfileCategories();
         var excluded = ProfileExclusions();
 
@@ -422,7 +434,7 @@ public class PlacesFixtureIntegrityTests
     public void The_parquet_is_small_enough_to_stay_committed() =>
         new FileInfo(RepoFixtures.SamplePlacesParquet).Length.ShouldBeLessThan(
             256 * 1024,
-            "115 rows; a megabyte-sized fixture does not belong in git.");
+            "120 rows; a megabyte-sized fixture does not belong in git.");
 
     [Fact]
     public void Every_row_a_test_relies_on_explains_itself()
@@ -436,6 +448,7 @@ public class PlacesFixtureIntegrityTests
             "fx_0078", "fx_0079", "fx_0080", "fx_0101", "fx_0102", "fx_0103", "fx_0104", "fx_0105",
             "fx_0106", "fx_0107", "fx_0108", "fx_0109", "fx_0110", "fx_0111", "fx_0112", "fx_0113",
             "fx_0015", "fx_0016", "fx_0020", "fx_0114", "fx_0115",
+            "fx_0116", "fx_0117", "fx_0118", "fx_0119", "fx_0120",
         ];
 
         var silent = loadBearing

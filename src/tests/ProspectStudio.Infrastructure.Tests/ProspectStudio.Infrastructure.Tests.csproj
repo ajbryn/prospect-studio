@@ -34,6 +34,7 @@
     <Compile Include="..\Shared\PlacesDataFixture.cs" Link="Infrastructure\PlacesDataFixture.cs" />
     <Compile Include="..\Shared\FileFingerprint.cs" Link="Infrastructure\FileFingerprint.cs" />
     <Compile Include="..\Shared\SamplePlaces.cs" Link="Infrastructure\SamplePlaces.cs" />
+    <Compile Include="..\Shared\SampleDealers.cs" Link="Infrastructure\SampleDealers.cs" />
     <Compile Include="..\Shared\FixtureExpectation.cs" Link="Infrastructure\FixtureExpectation.cs" />
   </ItemGroup>
 

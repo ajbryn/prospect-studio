@@ -21,6 +21,14 @@ public sealed class ProspectDbContext(DbContextOptions<ProspectDbContext> option
 
     public DbSet<Lead> Leads => Set<Lead>();
 
+    public DbSet<Dealer> Dealers => Set<Dealer>();
+
+    public DbSet<DealerBranch> DealerBranches => Set<DealerBranch>();
+
+    public DbSet<Territory> Territories => Set<Territory>();
+
+    public DbSet<SuppressionRow> Suppression => Set<SuppressionRow>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);
