@@ -92,16 +92,3 @@ internal static class ReferenceDataFixture
         return [.. FileNames.Select(name => FileFingerprint.Of(Path.Combine(refdata, name)))];
     }
 }
-
-internal sealed record FileFingerprint(string Name, bool Exists, long Length, DateTime LastWriteUtc)
-{
-    public static FileFingerprint Of(string path)
-    {
-        var info = new FileInfo(path);
-        return info.Exists
-            ? new FileFingerprint(info.Name, true, info.Length, info.LastWriteTimeUtc)
-            : new FileFingerprint(Path.GetFileName(path), false, 0, default);
-    }
-
-    public override string ToString() => Exists ? $"{Name} ({Length} bytes, {LastWriteUtc:O})" : $"{Name} (missing)";
-}

@@ -9,6 +9,7 @@ using ProspectStudio.Core.SearchProfiles;
 using ProspectStudio.Core.Status;
 using ProspectStudio.Infrastructure.Census;
 using ProspectStudio.Infrastructure.Config;
+using ProspectStudio.Infrastructure.Overture;
 using ProspectStudio.Infrastructure.Reference;
 using ProspectStudio.Infrastructure.Storage;
 using ProspectStudio.Infrastructure.Workspace;
@@ -42,6 +43,7 @@ try
     builder.Services.AddSingleton<StatusService>();
     builder.Services.AddProspectStudioStorage(options.DatabasePath);
     builder.Services.AddProspectStudioReferenceData(options);
+    builder.Services.AddProspectStudioOverture(options);
     builder.Services.AddProspectStudioMarketSizing(options);
     builder.Services.AddSingleton<ICampaignWorkspace, FileSystemCampaignWorkspace>();
     builder.Services.AddSingleton<SearchProfileValidator>();

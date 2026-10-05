@@ -84,6 +84,7 @@ public class C3ToolContractTests(ReferenceDataServerFixture server)
         error.Code.ShouldBe(
             "VALIDATION_FAILED",
             "mcp-tools.md §estimate_market: VALIDATION_FAILED for a bogus NAICS code. Raw: " + error.RawJson);
+        error.Message.ShouldNotBeNull($"the envelope must carry a message: {error.RawJson}");
         error.Message.ShouldContain(
             "warehouse",
             Case.Insensitive,

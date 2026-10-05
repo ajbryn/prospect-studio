@@ -8,10 +8,11 @@ using Shouldly;
 namespace ProspectStudio.Mcp.Tests;
 
 /// <summary>
-/// The residual stdout risk C0 recorded for this chunk to close: <c>Console.SetOut</c> and the source
-/// rules cannot stop a native library writing to the process's stdout handle through the C runtime, nor
-/// a child process that inherits that handle. C2 is the first chunk to load a native library (DuckDB),
-/// so these two guards belong here.
+/// The residual stdout risk C0 recorded for C2 <strong>and C4</strong> to close: <c>Console.SetOut</c>
+/// and the source rules cannot stop a native library writing to the process's stdout handle through the
+/// C runtime, nor a child process that inherits that handle. C2 is the first chunk to load a native
+/// library (DuckDB); C4 is the one that gives it real work - a full Parquet scan, a spatial join and
+/// <c>to_json</c> - so both tool calls are driven explicitly rather than one standing in for the other.
 /// </summary>
 public partial class DuckDbStdoutHygieneTests : IDisposable
 {
@@ -21,22 +22,64 @@ public partial class DuckDbStdoutHygieneTests : IDisposable
         Guid.NewGuid().ToString("N"));
 
     [Fact]
-    public async Task A_tool_call_that_runs_DuckDB_writes_nothing_but_json_rpc_to_stdout()
+    public async Task Resolve_geography_writes_nothing_but_json_rpc_to_stdout()
     {
         using var timeout = TestTimeout.Start(120);
-        var home = Path.Combine(_root, "home");
+        var data = PrepareReferenceData();
+
+        await AssertOnlyJsonRpcAsync(
+            data,
+            """{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"resolve_geography","arguments":{"query":"Houston metro"}}}""",
+            "resolve_geography",
+            timeout.Token);
+    }
+
+    [Fact]
+    public async Task Find_candidates_writes_nothing_but_json_rpc_to_stdout()
+    {
+        // The larger native path by far: find_candidates scans the whole Parquet extract, runs a
+        // spatial join across two CRS and serializes rows with to_json. Covering it only indirectly
+        // through the SDK-client contract tests is weaker than this, because that client silently
+        // discards any stdout line that is not a message - which is exactly what has to be caught.
+        using var timeout = TestTimeout.Start(180);
+        var data = PrepareReferenceData();
+        PlacesDataFixture.Install(data);
+
+        const string CampaignId = "cmp_STDOUT";
+        await ServerCampaigns.AddWithProfileAsync(data, CampaignId, timeout.Token);
+
+        var request =
+            """{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"find_candidates","arguments":{"campaignId":"CAMPAIGN"}}}"""
+                .Replace("CAMPAIGN", CampaignId, StringComparison.Ordinal);
+
+        await AssertOnlyJsonRpcAsync(data, request, "find_candidates", timeout.Token);
+    }
+
+    private string PrepareReferenceData()
+    {
         var data = Path.Combine(_root, "data");
         Directory.CreateDirectory(data);
         ReferenceDataFixture.Install(data);
+        return data;
+    }
 
+    /// <summary>
+    /// Runs one raw <c>tools/call</c> and fails if any stdout line is not JSON-RPC, or if the call did
+    /// not actually succeed - a tool that errored out early may never have reached DuckDB, which would
+    /// make the guard vacuous.
+    /// </summary>
+    private async Task AssertOnlyJsonRpcAsync(
+        string data,
+        string request,
+        string tool,
+        CancellationToken cancellationToken)
+    {
         var result = await RawServerSession.RunAsync(
-            home,
+            Path.Combine(_root, "home"),
             data,
-            [
-                """{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"resolve_geography","arguments":{"query":"Houston metro"}}}""",
-            ],
+            [request],
             lastRequestId: 2,
-            timeout.Token);
+            cancellationToken);
 
         foreach (var line in result.Stdout)
         {
@@ -49,7 +92,7 @@ public partial class DuckDbStdoutHygieneTests : IDisposable
             {
                 throw new ShouldAssertException(
                     $"stdout carried a line that is not JSON-RPC: '{line}'. DuckDB loads a native library "
-                    + $"and reads a Parquet file during this call, and neither may print."
+                    + $"and reads a Parquet file during '{tool}', and neither may print."
                     + $"{Environment.NewLine}{exception.Message}{Environment.NewLine}{result.Stderr}");
             }
 
@@ -67,10 +110,10 @@ public partial class DuckDbStdoutHygieneTests : IDisposable
 
         response.ValueKind.ShouldBe(
             JsonValueKind.Object,
-            $"no response to the resolve_geography call arrived.{Environment.NewLine}{result.Stderr}");
+            $"no response to the {tool} call arrived.{Environment.NewLine}{result.Stderr}");
 
         response.TryGetProperty("result", out var toolResult).ShouldBeTrue(
-            $"resolve_geography must answer with a tool result: {response}{Environment.NewLine}{DuckDbExtensionCache.Advice}");
+            $"{tool} must answer with a tool result: {response}{Environment.NewLine}{DuckDbExtensionCache.Advice}");
 
         (toolResult.TryGetProperty("isError", out var isError) && isError.GetBoolean()).ShouldBeFalse(
             $"the call has to actually reach DuckDB for this guard to mean anything: {toolResult}"

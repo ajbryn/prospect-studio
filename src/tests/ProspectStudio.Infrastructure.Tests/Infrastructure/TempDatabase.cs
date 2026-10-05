@@ -1,5 +1,7 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using ProspectStudio.Infrastructure.Storage;
 
@@ -33,14 +35,26 @@ internal sealed class TempDatabase : IAsyncDisposable
     public IServiceProvider Services => _services;
 
     /// <summary>Opens (or re-opens) the database file in <paramref name="directory"/>.</summary>
-    public static TempDatabase In(string directory)
+    /// <param name="interceptors">
+    /// Extra EF interceptors, appended to the production registration rather than replacing it, so the
+    /// options, pragmas and migrations assembly under test stay the server's. Used by the bulk-write
+    /// test to count commands and transactions.
+    /// </param>
+    public static TempDatabase In(string directory, params IInterceptor[] interceptors)
     {
         var databasePath = Path.Combine(directory, "prospect.db");
-        var services = new ServiceCollection()
-            .AddProspectStudioStorage(databasePath)
-            .BuildServiceProvider();
+        var services = new ServiceCollection().AddProspectStudioStorage(databasePath);
 
-        return new TempDatabase(services, databasePath);
+        if (interceptors.Length > 0)
+        {
+            // IDbContextOptionsConfiguration is EF's own hook for appending to a registration that has
+            // already been made, so the production AddProspectStudioStorage call stays the one under
+            // test rather than being rebuilt here with a second set of options.
+            services.AddSingleton<IDbContextOptionsConfiguration<ProspectDbContext>>(
+                new InterceptorConfiguration(interceptors));
+        }
+
+        return new TempDatabase(services.BuildServiceProvider(), databasePath);
     }
 
     public async Task<ProspectDbContext> CreateContextAsync(CancellationToken cancellationToken = default) =>
@@ -62,4 +76,12 @@ internal sealed class TempDatabase : IAsyncDisposable
         // folder from being deleted. Teardown only - production code never touches the pool.
         SqliteConnection.ClearAllPools();
     }
+}
+
+/// <summary>Appends one interceptor to an already-registered <see cref="ProspectDbContext"/>.</summary>
+internal sealed class InterceptorConfiguration(IInterceptor[] interceptors)
+    : IDbContextOptionsConfiguration<ProspectDbContext>
+{
+    public void Configure(IServiceProvider serviceProvider, DbContextOptionsBuilder optionsBuilder) =>
+        optionsBuilder.AddInterceptors(interceptors);
 }

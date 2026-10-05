@@ -4,6 +4,7 @@ using ProspectStudio.Core;
 using ProspectStudio.Core.Configuration;
 using ProspectStudio.Core.Reference;
 using ProspectStudio.Core.Status;
+using ProspectStudio.Infrastructure.Overture;
 using ProspectStudio.Infrastructure.Reference;
 using ProspectStudio.Infrastructure.Storage;
 using ProspectStudio.Infrastructure.Workspace;
@@ -55,6 +56,7 @@ public static class CliVerbs
             .AddSingleton<TimeProvider>(TimeProvider.System)
             .AddProspectStudioStorage(options.DatabasePath)
             .AddProspectStudioReferenceData(options)
+            .AddProspectStudioOverture(options)
             .BuildServiceProvider();
 
         var applied = await DatabaseInitializer.MigrateAsync(services, cancellationToken).ConfigureAwait(false);
@@ -73,8 +75,10 @@ public static class CliVerbs
         await PrepareReferenceDataAsync(services, request.Force, cancellationToken).ConfigureAwait(false);
 
         Console.WriteLine(
-            $"States         : {(request.States.Count == 0 ? "none requested" : string.Join(", ", request.States))}"
-            + " (place data per state is prepared by a later step)");
+            $"States         : {(request.States.Count == 0 ? "none requested" : string.Join(", ", request.States))}");
+
+        Console.WriteLine($"Overture       : {options.OvertureDirectory} (release {options.OvertureRelease})");
+        await PrepareOvertureAsync(services, request, cancellationToken).ConfigureAwait(false);
 
         Console.WriteLine();
         Console.WriteLine("Setup complete.");
@@ -105,6 +109,47 @@ public static class CliVerbs
             : $"prepared {step.File}{rows}";
 
         Console.WriteLine($"  {step.Step,-12} : {outcome}");
+        return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Runs the Overture step for each requested state and prints one line each. The source is a
+    /// ~205 MB download per state, so an operator re-running <c>setup</c> needs to see plainly that a
+    /// prepared extract was left alone (technical-design §6.1).
+    /// </summary>
+    private static async Task PrepareOvertureAsync(
+        IServiceProvider services,
+        SetupRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (request.States.Count == 0)
+        {
+            Console.WriteLine($"  {OvertureSteps.Places,-12} : no states requested, nothing to extract");
+            return;
+        }
+
+        var preparer = services.GetRequiredService<OvertureDataPreparer>();
+        var results = await preparer
+            .PrepareAsync(request.States, request.Force, PrintExtract, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (results.Any(result => !result.Skipped)
+            && await preparer.FindNewerReleaseAsync(cancellationToken).ConfigureAwait(false) is { } newer)
+        {
+            Console.WriteLine(
+                $"  {OvertureSteps.Places,-12} : note, release {newer} is now published; set "
+                + $"{PsOptionsFactory.OvertureReleaseVariable}={newer} and re-run with --force to use it");
+        }
+    }
+
+    private static Task PrintExtract(OvertureStepResult step, double progress, CancellationToken cancellationToken)
+    {
+        var places = step.Rows > 0 ? $" ({step.Rows} place(s))" : string.Empty;
+        var outcome = step.Skipped
+            ? $"skipped, {step.File} is already prepared"
+            : $"prepared {step.File}{places}";
+
+        Console.WriteLine($"  {step.Step,-12} : {step.State} - {outcome}");
         return Task.CompletedTask;
     }
 
@@ -161,7 +206,8 @@ public static class CliVerbs
     private static int Doctor(PsOptions options)
     {
         var reference = new ReferenceDataFiles(options.ReferenceDataDirectory);
-        var status = new StatusService(options, reference).GetStatus();
+        var overture = new OvertureDataFiles(options.OvertureDirectory, options.OvertureRelease);
+        var status = new StatusService(options, reference, overture).GetStatus();
 
         Console.WriteLine($"prospect-studio {status.Version}");
         Console.WriteLine();

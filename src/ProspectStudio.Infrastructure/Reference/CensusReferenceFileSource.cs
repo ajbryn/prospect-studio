@@ -30,7 +30,7 @@ public sealed class CensusReferenceFileSource : IReferenceFileSource, IDisposabl
     private readonly SemaphoreSlim _gate = new(1, 1);
     private DateTimeOffset _lastRequest = DateTimeOffset.MinValue;
 
-    public CensusReferenceFileSource(CensusHttpClient http, string cacheDirectory, TimeProvider timeProvider)
+    public CensusReferenceFileSource(ProspectStudioHttpClient http, string cacheDirectory, TimeProvider timeProvider)
     {
         ArgumentNullException.ThrowIfNull(http);
         ArgumentException.ThrowIfNullOrWhiteSpace(cacheDirectory);
@@ -174,7 +174,7 @@ public sealed class CensusReferenceFileSource : IReferenceFileSource, IDisposabl
     private CancellationTokenSource Deadline(CancellationToken cancellationToken)
     {
         var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        deadline.CancelAfter(CensusHttpClient.ResponseTimeout);
+        deadline.CancelAfter(ProspectStudioHttpClient.ResponseTimeout);
         return deadline;
     }
 

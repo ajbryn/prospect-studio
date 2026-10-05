@@ -7,13 +7,17 @@ using Shouldly;
 namespace ProspectStudio.Mcp.Tests;
 
 /// <summary>
-/// POC-1, POC-2 and mcp-tools.md §prepare_data, against a server whose reference data is already in
-/// place. The run must therefore skip every step: a second run that downloads anything would both
-/// break idempotence and put the network inside a unit test. The Overture step belongs to C4, so
-/// nothing may appear under <c>overture\</c> yet.
+/// POC-1, POC-2 and mcp-tools.md §prepare_data, against a server whose reference data <em>and</em>
+/// Overture extracts are already in place. The run must therefore skip every step: a second run that
+/// downloaded anything would both break idempotence and put the network inside a unit test - and from
+/// C4 onwards that download is the 205 MB Texas Overture extract, not just a census.gov file.
 /// </summary>
-[Collection(ReferenceDataServerCollection.Name)]
-public class PrepareDataContractTests(ReferenceDataServerFixture server)
+/// <remarks>
+/// These moved off <see cref="ReferenceDataServerFixture"/> in C4, which deliberately has no Overture
+/// extract so that <c>find_candidates</c> can be proved to answer <c>NOT_READY</c>.
+/// </remarks>
+[Collection(CandidateServerCollection.Name)]
+public class PrepareDataContractTests(CandidateServerFixture server)
 {
     [Fact]
     public async Task Get_status_reports_reference_data_as_ready()
@@ -22,7 +26,7 @@ public class PrepareDataContractTests(ReferenceDataServerFixture server)
             .GetProperty("ready");
 
         ready.GetProperty("referenceData").GetBoolean().ShouldBeTrue(
-            $"'{server.ReferenceDataDirectory}' holds counties, CBSA and ZCTA data plus a manifest, "
+            $"'{ReferenceDataFixture.Directory(server.Data)}' holds counties, CBSA and ZCTA data plus a manifest, "
             + "so POC-1's readiness flag is true.");
     }
 
@@ -91,22 +95,57 @@ public class PrepareDataContractTests(ReferenceDataServerFixture server)
     }
 
     [Fact]
-    public async Task Prepare_data_does_not_extract_Overture_yet()
+    public async Task Prepare_data_skips_an_Overture_extract_that_is_already_there()
     {
+        // Chunk C4 adds the Overture step (technical-design §6.1). It is the one step whose source is a
+        // 205 MB download, so "skip what is already done" stops being a nicety and becomes the only
+        // reason this test can run offline at all.
+        var before = PlacesDataFixture.Fingerprint(server.Data);
+        before.ShouldNotBeEmpty($"the fixture extract must be installed at '{PlacesDataFixture.ReleaseDirectory(server.Data)}'.");
+
         var queued = await ToolCall.OkAsync(
             server.Client,
             "prepare_data",
             new Dictionary<string, object?> { ["states"] = new[] { "TX" } },
             server.Diagnostics);
 
-        await WaitForSuccessAsync(queued.GetProperty("jobId").GetString()!);
+        var job = await WaitForSuccessAsync(queued.GetProperty("jobId").GetString()!);
 
-        var overture = Path.Combine(server.Data, "overture");
-        if (Directory.Exists(overture))
-        {
-            Directory.EnumerateFileSystemEntries(overture).ShouldBeEmpty(
-                "the Overture extract is chunk C4; C2's prepare_data covers reference data only.");
-        }
+        PlacesDataFixture.Fingerprint(server.Data).ShouldBe(
+            before,
+            "a changed extract means the Overture step re-ran, which means prepare_data downloaded from "
+            + "S3 inside a unit test (CLAUDE.md: unit tests must not hit the network).");
+
+        // The step has to be reported, not merely not-run: C2's result deliberately carried a note
+        // saying the states bought nothing yet, and leaving that in place would now be a lie.
+        var result = job.GetProperty("result");
+        result.TryGetProperty("overture", out var overture).ShouldBeTrue(
+            "the job result must say what the Overture step did, one entry per state, the same way "
+            + $"'referenceData' does for the Census steps. Got: {result}");
+
+        var steps = overture.EnumerateArray().ToList();
+        steps.Count.ShouldBe(1, $"one requested state, one entry. Got: {overture}");
+        steps[0].GetProperty("skipped").GetBoolean().ShouldBeTrue(
+            $"the extract was already there, so the step had nothing to do. Got: {overture}");
+    }
+
+    [Fact]
+    public async Task Get_status_reports_the_Overture_release_and_the_states_it_holds()
+    {
+        var overture = (await ToolCall.OkAsync(server.Client, "get_status", diagnostics: server.Diagnostics))
+            .GetProperty("ready")
+            .GetProperty("overture");
+
+        overture.GetProperty("release").GetString().ShouldBe(
+            PlacesDataFixture.Release,
+            "mcp-tools.md §get_status shows the release the extracts were taken from.");
+
+        overture.GetProperty("states").EnumerateArray()
+            .Select(state => state.GetString())
+            .Order(StringComparer.Ordinal)
+            .ToList()
+            .ShouldBe(["OK", "TX"], "the states with an extract on disk, which is what a skill checks "
+                + "before calling find_candidates.");
     }
 
     [Fact]

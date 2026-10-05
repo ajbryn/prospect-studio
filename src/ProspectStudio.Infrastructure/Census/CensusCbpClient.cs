@@ -265,7 +265,7 @@ public sealed class CensusCbpClient(
             }
 
             var discovered = await DiscoverVintageAsync(cancellationToken).ConfigureAwait(false);
-            await StoreVintageAsync(discovered, cancellationToken).ConfigureAwait(false);
+            await StoreVintageAsync(discovered).ConfigureAwait(false);
 
             _vintage = discovered;
             return discovered;
@@ -386,7 +386,7 @@ public sealed class CensusCbpClient(
 
         // An empty market is cached too: it is a stable answer, and re-asking costs the one thing this
         // call has least of.
-        await WriteCacheAsync(path, body, cancellationToken).ConfigureAwait(false);
+        await WriteCacheAsync(path, body).ConfigureAwait(false);
         return body;
     }
 
@@ -619,11 +619,10 @@ public sealed class CensusCbpClient(
         }
     }
 
-    private Task StoreVintageAsync(CbpVintage vintage, CancellationToken cancellationToken) =>
+    private Task StoreVintageAsync(CbpVintage vintage) =>
         WriteCacheAsync(
             VintageCachePath(),
-            JsonSerializer.Serialize(new { year = vintage.Year, naicsVariable = vintage.NaicsVariable }),
-            cancellationToken);
+            JsonSerializer.Serialize(new { year = vintage.Year, naicsVariable = vintage.NaicsVariable }));
 
     /// <summary>
     /// The cached body when it is still inside <see cref="CacheLifetime"/>, measured against the injected
@@ -663,7 +662,13 @@ public sealed class CensusCbpClient(
     }
 
     /// <param name="body">The response body, or null for "CBP publishes nothing for this query".</param>
-    private async Task WriteCacheAsync(string path, string? body, CancellationToken cancellationToken)
+    /// <remarks>
+    /// Takes no <see cref="CancellationToken"/> on purpose: by the time there is a body to write, the round
+    /// trip is already paid for, so abandoning the write throws that work away <em>and</em> silently skips
+    /// the cache. A caller that has cancelled is honoured at the next await instead, a fraction of a
+    /// millisecond later.
+    /// </remarks>
+    private async Task WriteCacheAsync(string path, string? body)
     {
         try
         {
@@ -688,9 +693,10 @@ public sealed class CensusCbpClient(
                 writer.WriteEndObject();
             }
 
-            await File.WriteAllBytesAsync(path, buffer.ToArray(), cancellationToken).ConfigureAwait(false);
+            await File.WriteAllBytesAsync(path, buffer.ToArray(), CancellationToken.None).ConfigureAwait(false);
         }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        catch (Exception exception)
+            when (exception is IOException or UnauthorizedAccessException or OperationCanceledException)
         {
             // A cache that cannot be written is slower, not wrong.
         }

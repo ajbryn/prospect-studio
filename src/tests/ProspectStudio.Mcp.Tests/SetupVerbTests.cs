@@ -1,6 +1,7 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using ProspectStudio.Core.Reference;
 using ProspectStudio.Infrastructure.Storage;
 using ProspectStudio.Infrastructure.Workspace;
 using ProspectStudio.Mcp.Tests.Infrastructure;
@@ -12,8 +13,9 @@ namespace ProspectStudio.Mcp.Tests;
 /// <summary>
 /// The <c>setup</c> CLI verb (implementation-plan C2, POC-2). It is also where two things deferred from
 /// C1 land: running migrations from <c>setup</c>, and the <c>--seed-fixtures</c> flag beside
-/// <c>PS_SEED_FIXTURES=1</c>. Reference data is pre-installed in every test that exercises the steps,
-/// because a step that does not skip would download from census.gov - which no test may do.
+/// <c>PS_SEED_FIXTURES=1</c>. Reference data <em>and</em> the Overture extract are pre-installed in
+/// every test that exercises the steps, because a step that does not skip would download from
+/// census.gov or pull the 205 MB Overture extract from S3 - which no test may do (CLAUDE.md).
 /// </summary>
 public class SetupVerbTests
 {
@@ -116,11 +118,14 @@ public class SetupVerbTests
     }
 
     [Fact]
-    public async Task Setup_does_not_extract_Overture_yet()
+    public async Task Setup_skips_an_Overture_extract_that_is_already_there()
     {
         using var timeout = TestTimeout.Start(180);
         using var workspace = new TempWorkspace();
         ReferenceDataFixture.Install(EnsureData(workspace));
+
+        var before = PlacesDataFixture.Fingerprint(workspace.Data);
+        before.ShouldNotBeEmpty();
 
         var run = await ServerCli.RunAsync(
             workspace.Home,
@@ -130,17 +135,26 @@ public class SetupVerbTests
 
         run.ExitCode.ShouldBe(0, run.ToString());
 
-        var overture = Path.Combine(workspace.Data, "overture");
-        if (Directory.Exists(overture))
-        {
-            Directory.EnumerateFileSystemEntries(overture).ShouldBeEmpty(
-                $"the Overture extract is chunk C4; C2's setup covers reference data only; {run}");
-        }
+        PlacesDataFixture.Fingerprint(workspace.Data).ShouldBe(
+            before,
+            "chunk C4 adds the Overture step (technical-design §6.1); a changed file means setup went "
+            + $"to S3, which a test may not do; {run}");
+
+        run.Stdout.ShouldContain(
+            OvertureSteps.Places,
+            Case.Insensitive,
+            "the operator needs to see the Overture step reported - skipped here - rather than wonder "
+            + $"whether it ran at all; {run}");
     }
 
+    /// <summary>
+    /// A data folder with every step's output already there, so <c>setup</c> skips all of them. From C4
+    /// that includes the Overture extract, whose source is an S3 download.
+    /// </summary>
     private static string EnsureData(TempWorkspace workspace)
     {
         Directory.CreateDirectory(workspace.Data);
+        PlacesDataFixture.Install(workspace.Data);
         return workspace.Data;
     }
 }
