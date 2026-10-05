@@ -25,6 +25,7 @@
     <Compile Include="..\Shared\CbpFixtures.cs" Link="Market\CbpFixtures.cs" />
     <Compile Include="..\Shared\RepoFixtures.cs" Link="Candidates\RepoFixtures.cs" />
     <Compile Include="..\Shared\SamplePlaces.cs" Link="Candidates\SamplePlaces.cs" />
+    <Compile Include="..\Shared\FixtureExpectation.cs" Link="Candidates\FixtureExpectation.cs" />
     <Compile Include="..\Shared\PlacesDataFixture.cs" Link="Candidates\PlacesDataFixture.cs" />
     <Compile Include="..\Shared\FileFingerprint.cs" Link="Candidates\FileFingerprint.cs" />
   </ItemGroup>

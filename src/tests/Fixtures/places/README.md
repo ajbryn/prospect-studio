@@ -64,11 +64,29 @@ test pass while the real query threw.
   and 17 keywords): **84** rows match on category or keyword; the profile's
   `exclusions.overtureCategories` drops two (`fx_0075`, `fx_0114`) and its `exclusions.keywords` drops
   one (`fx_0115`), leaving **81**; dedupe then collapses three duplicates, leaving **78** leads.
-- `byCategory` over those 78 leads: `warehouse` 13, `electrician` 8, `distribution_service` 7,
+- `byCategory` over those 78 leads: `warehouse` 15, `electrician` 8, `distribution_service` 7,
   `metal_fabricator` 6, `manufacturer` 6, `hvac_service` 6, `freight_and_cargo_service` 6,
   `property_management` 5, `sign_making` 5, `glass_and_mirror_sales_service` 4,
   `industrial_equipment_manufacturer` 3, `contractor` 2, `machine_shop` 2, `motor_freight_trucking` 2,
-  `storage_facility` 2, `steel_fabricator` 1.
+  `steel_fabricator` 1.
+
+## Why the profile cannot name `storage_facility`
+
+**Do not add `storage_facility` back to `sample-search-profile.json` for the apparent coverage.** It is
+the *parent* of `self_storage_facility` — the real hierarchy is
+`[services_and_business, storage_facility, self_storage_facility]` — so naming it drags all 6,301 Texas
+consumer self-storage businesses in as aerial-lift prospects. The category filter matches interior
+hierarchy nodes as well as leaves (that is what `fx_0106` exists to prove), and this is the cost of
+that: a broad category takes every child with it. `technical-design.md` §6.3 makes the same point
+generally — "prefer specific `taxonomy.primary` values over broad ones".
+
+The two fixture rows that used to be `storage_facility` are industrial warehousing rather than consumer
+self-storage, so both are now plain `warehouse`:
+
+| Row | Was | Is | Why it matters |
+|---|---|---|---|
+| `fx_0012` Harris Ridge Cold Storage | `storage_facility` | `warehouse` | A mockup warehousing lead; industrial cold storage |
+| `fx_0111` Chambers County Industrial Storage | `storage_facility` | `warehouse` | **The only row covering a missing `freeform` address.** When the profile dropped `storage_facility` this row silently stopped matching, and the extraction path stopped being tested while the suite stayed green |
 
 ## Which row proves which property
 
@@ -94,8 +112,9 @@ test pass while the real query threw.
 | `fx_0110` | **First-of-list extraction**: two `websites`, two `phones` (the first with a leading country `1`), and a **ZIP+4** postcode `77032-2514` |
 | `fx_0065` | A **ZIP+4** postcode on a ZIP that C5 routes on (`77504-1877`), so truncating to five digits is load-bearing rather than cosmetic |
 | `fx_0021`, `fx_0049` | Further **ZIP+4** postcodes |
+| `fx_0012` | A mockup warehousing lead, `warehouse` since C4's manual check — see the `storage_facility` note above |
 | `fx_0045` | **No `freeform`** and **no website** — 99,004 real Texas rows have no freeform |
-| `fx_0111` | **No `freeform`**, but locality and postcode present, so nothing else may be lost with it |
+| `fx_0111` | **No `freeform`**, but locality and postcode present, so nothing else may be lost with it. `warehouse`, not `storage_facility` — see the note above |
 | `fx_0029`, and 22 rows in all | **No website** |
 | `fx_0112` | `The Waller County Industrial Park Facilities Management Company, LLC` — 68 characters for the postcard overflow checks, and `The …`/`Company, LLC` for the name normalizer |
 | `fx_0002` | `Gulf Coast Sign & Lighting` → `gulf coast sign and lighting`, the `&`→`and` normalizer case §7.1 names |
@@ -106,6 +125,29 @@ with synthetic rows in `CandidateDedupeTests`, not with fixture rows: a three-ro
 domain edge and one name edge that do not touch, and wiring that into the committed set would have
 changed the lead arithmetic above for no gain.
 | `fx_0015`, `fx_0016`, `fx_0020` | The two dealers and the competitor, **in target categories** (`industrial_equipment_manufacturer`, `distribution_service`, `industrial_equipment_manufacturer`) so C5 can prove suppression removes them. They were originally `machine_and_tool_rental`, which the profile **excludes** — so a profile-driven search never surfaced them and C5's suppression test could not have failed. A fixture that quietly guarantees a green test is worse than no fixture; `PlacesFixtureIntegrityTests` now asserts all three stay searchable |
+
+## The `[tag]` on every load-bearing note
+
+Each row whose job is to exercise a search path carries a machine-readable tag at the front of
+`fixture_note`, and `PlacesFixtureIntegrityTests` checks every one of them against the live profile:
+
+| Tag | Means | Count |
+|---|---|---|
+| `[candidate]` | The profile selects it and its exclusions keep it, so it reaches the campaign | 26 |
+| `[excluded]` | The profile selects it and then an exclusion list removes it | 3 |
+| `[unmatched]` | The profile must **not** select it — out of scope, below the confidence floor, or in no segment | 9 |
+
+Untagged rows are ordinary filler and noise; nothing asserts on them.
+
+This exists because a profile edit can silently disarm a row, and it did three times during C4: the
+dealer rows sat in an excluded category so C5's suppression would have had nothing to remove,
+`machine_and_tool_rental` was left with no rows at all, and dropping `storage_facility` disarmed
+`fx_0111`. Every one of those left the suite green while testing one thing less.
+
+`Every_documented_row_still_plays_the_part_its_note_claims` names the row, the category and the reason
+the moment that happens. `Every_behaviour_the_fixture_claims_to_cover_has_at_least_one_row` stops the
+first test passing vacuously because the rows were deleted instead. **Fix the row, not the tag** — the
+tag is the coverage, so relabelling it to match reality is how the coverage disappears.
 
 ## The CSV's columns
 

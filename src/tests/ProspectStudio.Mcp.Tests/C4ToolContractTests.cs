@@ -160,8 +160,11 @@ public class C4ToolContractTests(CandidateServerFixture server)
                 StringComparer.Ordinal);
 
         // Counted over the 78 STORED leads, so the three duplicates are not counted twice:
-        // 'warehouse' loses fx_0013 and fx_0113, 'metal_fabricator' loses fx_0014.
-        byCategory.ShouldContainKeyAndValue("warehouse", 13);
+        // 'warehouse' holds 17 rows in scope and loses fx_0013 and fx_0113, 'metal_fabricator' loses
+        // fx_0014. fx_0012 and fx_0111 are counted here because they were re-categorised from
+        // storage_facility to warehouse - see the README note on why the profile cannot name
+        // storage_facility.
+        byCategory.ShouldContainKeyAndValue("warehouse", 15);
         byCategory.ShouldContainKeyAndValue("industrial_equipment_manufacturer", 3);
         byCategory.ShouldContainKeyAndValue("electrician", 8);
         byCategory.ShouldContainKeyAndValue("metal_fabricator", 6);
@@ -383,7 +386,7 @@ public class C4ToolContractTests(CandidateServerFixture server)
         warehouse.ValueKind.ShouldBe(
             JsonValueKind.Object,
             $"'warehouse' is a real Overture category and the fixture holds 17 of them. Got: {payload}");
-        warehouse.GetProperty("countInState").GetInt32().ShouldBe(17);
+        warehouse.GetProperty("countInState").GetInt32().ShouldBe(19);
         warehouse.GetProperty("path").EnumerateArray().Select(value => value.GetString()).Last()
             .ShouldBe("warehouse", "the path is the hierarchy, root first, leaf last.");
     }

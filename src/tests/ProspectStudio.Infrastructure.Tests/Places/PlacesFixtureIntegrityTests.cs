@@ -246,6 +246,93 @@ public class PlacesFixtureIntegrityTests
     }
 
     [Fact]
+    public void Every_documented_row_still_plays_the_part_its_note_claims()
+    {
+        // The guard this fixture needed three times over. A row whose purpose is to exercise a path -
+        // the missing freeform address, the generic host, the first-of-list extraction - stops
+        // exercising it the moment a profile edit makes it no longer match, and nothing fails. The
+        // suite stays green while testing one thing less, which is the worst way to lose coverage.
+        //
+        // It has happened three times in C4 alone: the dealer rows sat in an excluded category so C5's
+        // suppression would have had nothing to remove; machine_and_tool_rental was left with no rows
+        // at all; and dropping storage_facility from the profile disarmed fx_0111, the only row
+        // covering a missing freeform address. Each was caught by eye, or by CI, rather than by a test.
+        var profile = SampleProfile.Load();
+
+        var wrong = FixtureTags.Tagged
+            .Where(row => profile.Outcome(row.Place) != row.Expected)
+            .Select(row =>
+                $"  {row.Place.Id} is tagged [{row.Expected.ToString().ToLowerInvariant()}] but the "
+                + $"profile would treat it as [{profile.Outcome(row.Place).ToString().ToLowerInvariant()}]: "
+                + $"{profile.Explain(row.Place)}")
+            .ToList();
+
+        wrong.ShouldBeEmpty(
+            $"""
+             {wrong.Count} fixture row(s) no longer do what poc/fixtures/sample-places.csv says they do.
+
+             {string.Join(Environment.NewLine, wrong)}
+
+             Either the row drifted or the profile did. Fix the row - move the point, change the
+             category - rather than the tag: the tag is the coverage this fixture exists to provide,
+             and relabelling it to match reality is how the coverage disappears quietly.
+             """);
+    }
+
+    [Fact]
+    public void Every_behaviour_the_fixture_claims_to_cover_has_at_least_one_row()
+    {
+        // The other half of the same guard: the test above passes vacuously if the rows simply vanish.
+        // Each tag class has to stay populated, so deleting the last row of a kind fails here instead
+        // of quietly narrowing what the suite checks.
+        foreach (var expectation in Enum.GetValues<FixtureExpectation>())
+        {
+            FixtureTags.Tagged.Count(row => row.Expected == expectation).ShouldBeGreaterThan(
+                0,
+                $"no fixture row is tagged [{expectation.ToString().ToLowerInvariant()}] any more, so "
+                + "nothing exercises that outcome. See the row table in "
+                + "src/tests/Fixtures/places/README.md.");
+        }
+
+        // And the named paths, by the row that carries each. These are the ones a profile edit has
+        // actually broken before, so they are pinned by id rather than only by count.
+        foreach (var (id, behaviour) in new[]
+                 {
+                     ("fx_0110", "first-of-list website and phone extraction"),
+                     ("fx_0111", "a missing freeform address"),
+                     ("fx_0045", "a missing freeform address and no website"),
+                     ("fx_0104", "a generic-host website that must not form a domain key"),
+                     ("fx_0106", "a category matched only through the hierarchy"),
+                     ("fx_0065", "a ZIP+4 postcode on a ZIP that C5 routes on"),
+                     ("fx_0112", "an awkwardly long name"),
+                     ("fx_0013", "the domain-key duplicate"),
+                     ("fx_0014", "the name-and-proximity duplicate"),
+                     ("fx_0113", "the name-and-geohash duplicate"),
+                 })
+        {
+            FixtureTags.Of(SamplePlaces.Row(id)).ShouldBe(
+                FixtureExpectation.Candidate,
+                $"{id} is what covers {behaviour}; it has to reach the campaign for that path to run.");
+        }
+    }
+
+    [Fact]
+    public void The_profile_still_selects_the_documented_number_of_rows()
+    {
+        // Pins the arithmetic the README and the find_candidates contract test both quote, in the fast
+        // suite rather than only in the slow one. A profile edit shows up here first, naming the count
+        // that moved, instead of as a bare 78-versus-76 in an MCP test two minutes later.
+        var profile = SampleProfile.Load();
+
+        var selected = SamplePlaces.All.Where(profile.Selects).ToList();
+        var surviving = selected.Where(place => !profile.IsExcluded(place)).ToList();
+
+        selected.Count.ShouldBe(84, "rows matching a category or keyword, in the ten counties, at confidence >= 0.6.");
+        surviving.Count.ShouldBe(81, "after exclusions.overtureCategories and exclusions.keywords.");
+        (surviving.Count - 3).ShouldBe(78, "three of those are duplicates, leaving the leads find_candidates stores.");
+    }
+
+    [Fact]
     public void The_suppression_targets_are_in_categories_a_search_actually_returns()
     {
         // These three - two dealers and a competitor - were originally machine_and_tool_rental, which

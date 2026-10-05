@@ -17,10 +17,10 @@ public class DuckDbPlacesSourceTests
 
     private static readonly string[] AllTargetCategories =
     [
-        "warehouse", "distribution_service", "freight_and_cargo_service", "storage_facility",
-        "motor_freight_trucking", "manufacturer", "industrial_equipment_manufacturer",
-        "metal_fabricator", "machine_shop", "electrician", "hvac_service", "sign_making",
-        "glass_and_mirror_sales_service", "property_management",
+        "warehouse", "distribution_service", "freight_and_cargo_service", "motor_freight_trucking",
+        "manufacturer", "industrial_equipment_manufacturer", "metal_fabricator", "machine_shop",
+        "electrician", "hvac_service", "sign_making", "glass_and_mirror_sales_service",
+        "property_management",
     ];
 
     private static readonly string[] ProfileKeywords =
@@ -167,13 +167,13 @@ public class DuckDbPlacesSourceTests
     {
         using var environment = new PlacesTestEnvironment();
 
-        // The other half: 'storage_facility' has a two-element hierarchy and appears nowhere as an
-        // interior node, so a hierarchy-only implementation would still find it - but 'manufacturer'
-        // is both, which is what makes the OR worth writing.
-        var found = await FindAsync(environment, Query(categories: ["storage_facility"], keywords: []));
+        // The other half: 'machine_shop' appears nowhere in the fixture as an interior node, so only
+        // 'taxonomy.primary IN (...)' can find these two - whereas 'manufacturer' is both a leaf and an
+        // interior node, which is what makes the OR worth writing.
+        var found = await FindAsync(environment, Query(categories: ["machine_shop"], keywords: []));
 
         found.Select(place => place.Id).Order(StringComparer.Ordinal).ToList()
-            .ShouldBe(["fx_0012", "fx_0111"]);
+            .ShouldBe(["fx_0010", "fx_0105"]);
     }
 
     [Fact]
@@ -330,8 +330,8 @@ public class DuckDbPlacesSourceTests
         var warehouse = counts.SingleOrDefault(count => count.Category == "warehouse")
             .ShouldNotBeNull($"'warehouse' must be among the results: {string.Join(", ", counts.Select(count => count.Category))}");
         warehouse.CountInState.ShouldBe(
-            17,
-            "the 17 'warehouse' rows in the extract, counted on taxonomy.primary - the same way the "
+            19,
+            "the 19 'warehouse' rows in the extract, counted on taxonomy.primary - the same way the "
             + "real 960 Texas rows were counted.");
         warehouse.Path.ToList().ShouldBe(
             ["services_and_business", "b2b_service", "b2b_transportation_and_storage_service", "b2b_storage", "warehouse"],
@@ -347,7 +347,7 @@ public class DuckDbPlacesSourceTests
 
         counts.Count.ShouldBe(3);
         counts.Select(count => count.CountInState).ShouldBeInOrder(SortDirection.Descending);
-        counts[0].Category.ShouldBe("warehouse", "17 rows, the commonest in the fixture.");
+        counts[0].Category.ShouldBe("warehouse", "19 rows, the commonest in the fixture.");
     }
 
     [Fact]
