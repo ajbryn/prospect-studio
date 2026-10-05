@@ -878,7 +878,15 @@ public class CensusCbpClientTests
     /// <summary>Keeps the key out of a failure message, which ends up in CI logs.</summary>
     private static string Redact(string uri) => uri.Replace(PlaceholderKey, "<key>", StringComparison.Ordinal);
 
-    /// <summary>Everything here is local: two seconds is already generous.</summary>
+    /// <summary>
+    /// A guard against a hung call, not a performance assertion - so it is generous. Two seconds was not:
+    /// it is wall clock from here, and several of these tests spend it on three sequential calls, ten
+    /// requests at the cap, or four cold clients each probing for the vintage, plus the cache files each of
+    /// those writes. On an idle dev machine the heaviest took 71 ms; under CPU contention it took 433 ms,
+    /// and a loaded two-core CI runner went past 2 s and failed inside a cache write
+    /// (<c>A_different_query_is_cached_separately</c>, Release). Raising the default fixes the family
+    /// rather than the one test that surfaced first; the slow paths keep their own explicit deadlines.
+    /// </summary>
     private static CancellationTokenSource Deadline(TimeSpan? within = null) =>
-        new(within ?? TimeSpan.FromSeconds(2));
+        new(within ?? TimeSpan.FromSeconds(10));
 }
