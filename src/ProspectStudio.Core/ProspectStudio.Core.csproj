@@ -9,11 +9,13 @@
     <PackageReference Include="JsonSchema.Net" Version="9.4.0" />
   </ItemGroup>
 
-  <!-- The search-profile schema travels inside the assembly, so validation works from a published
-       server with no spec pack next to it (implementation-plan C1). -->
+  <!-- The search-profile and research schemas travel inside the assembly, so validation works from a
+       published server with no spec pack next to it (implementation-plan C1, C6). -->
   <ItemGroup>
     <EmbeddedResource Include="$(MSBuildThisFileDirectory)..\..\poc\schemas\search-profile.schema.json"
                       LogicalName="ProspectStudio.Core.Schemas.search-profile.schema.json" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)..\..\poc\schemas\research.schema.json"
+                      LogicalName="ProspectStudio.Core.Schemas.research.schema.json" />
   </ItemGroup>
 
 </Project>
