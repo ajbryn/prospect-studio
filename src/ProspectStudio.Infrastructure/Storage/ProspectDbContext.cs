@@ -29,6 +29,10 @@ public sealed class ProspectDbContext(DbContextOptions<ProspectDbContext> option
 
     public DbSet<SuppressionRow> Suppression => Set<SuppressionRow>();
 
+    public DbSet<Research> Research => Set<Research>();
+
+    public DbSet<Signal> Signals => Set<Signal>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);

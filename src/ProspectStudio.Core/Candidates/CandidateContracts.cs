@@ -156,6 +156,15 @@ public static class LeadStatuses
     public const string Approved = "approved";
     public const string Rejected = "rejected";
     public const string Hold = "hold";
+
+    public static IReadOnlyList<string> All { get; } =
+        [Candidate, Suppressed, Duplicate, Review, Approved, Rejected, Hold];
+
+    /// <summary>
+    /// Whether a status is one §5.2 lists. An unknown value stored as text would make every filter and
+    /// every count disagree with reality, so <c>update_leads</c> and <c>list_leads</c> both check.
+    /// </summary>
+    public static bool IsKnown(string? status) => status is not null && All.Contains(status);
 }
 
 /// <summary>One row of <c>lookup_overture_categories</c>' output (mcp-tools.md §lookup_overture_categories).</summary>

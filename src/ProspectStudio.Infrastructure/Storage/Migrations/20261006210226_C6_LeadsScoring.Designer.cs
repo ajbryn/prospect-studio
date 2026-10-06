@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ProspectStudio.Infrastructure.Storage;
 
@@ -10,9 +11,11 @@ using ProspectStudio.Infrastructure.Storage;
 namespace ProspectStudio.Infrastructure.Storage.Migrations
 {
     [DbContext(typeof(ProspectDbContext))]
-    partial class ProspectDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261006210226_C6_LeadsScoring")]
+    partial class C6_LeadsScoring
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.12");

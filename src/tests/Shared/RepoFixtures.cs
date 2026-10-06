@@ -82,6 +82,14 @@ internal static class RepoFixtures
     public static string GeoFixture(params string[] parts) =>
         Existing(Path.Combine(TestFixturesDirectory, "geo"), "src/tests/Fixtures/geo", parts);
 
+    /// <summary>
+    /// A path under <c>src/tests/Fixtures/research</c>: the research documents for the three worked
+    /// examples of <c>docs/03 §8</c> plus a <c>no_signal</c> document. Its README carries the scoring
+    /// arithmetic each one produces.
+    /// </summary>
+    public static string ResearchFixture(params string[] parts) =>
+        Existing(Path.Combine(TestFixturesDirectory, "research"), "src/tests/Fixtures/research", parts);
+
     /// <summary>A path under <c>src/tests/Fixtures/places</c>.</summary>
     public static string PlacesFixture(params string[] parts) =>
         Existing(Path.Combine(TestFixturesDirectory, "places"), "src/tests/Fixtures/places", parts);

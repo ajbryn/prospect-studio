@@ -47,6 +47,20 @@ public interface ICampaignStore
         CancellationToken cancellationToken);
 
     /// <summary>
+    /// Stores the effective scoring weights of a <c>score_leads</c> run as the campaign's
+    /// <c>scoring_weights_json</c>, so <c>save_research</c> re-scores one lead on the same scale as the
+    /// rest of the list (technical-design §5.2). False when the campaign is gone.
+    /// </summary>
+    /// <param name="scoringWeightsJson">
+    /// The <c>{feature: weight}</c> object the run echoed back, or null to forget the scale.
+    /// </param>
+    Task<bool> SaveScoringWeightsAsync(
+        string campaignId,
+        string? scoringWeightsJson,
+        DateTimeOffset updatedAt,
+        CancellationToken cancellationToken);
+
+    /// <summary>
     /// The campaign's lead counts for <c>get_campaign</c>. Empty groupings rather than absent ones, and
     /// grouped on real columns rather than inside JSON (CLAUDE.md §Conventions).
     /// </summary>

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ProspectStudio.Core.Campaigns;
+using ProspectStudio.Core.Candidates;
 using ProspectStudio.Core.Domain;
 
 namespace ProspectStudio.Infrastructure.Storage;
@@ -80,7 +81,12 @@ public sealed class EfCampaignStore(IDbContextFactory<ProspectDbContext> context
                 campaign.Status,
                 campaign.Product,
                 campaign.CreatedAt,
-                0))
+
+                // The real count, on the same basis as GetCountsAsync's byStatus - duplicates excluded -
+                // so the two tools cannot disagree about how many leads a campaign has. A correlated
+                // subquery in the projection keeps the page one round trip rather than one per row.
+                context.Leads.Count(lead =>
+                    lead.CampaignId == campaign.Id && lead.Status != LeadStatuses.Duplicate)))
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
@@ -133,15 +139,54 @@ public sealed class EfCampaignStore(IDbContextFactory<ProspectDbContext> context
         return true;
     }
 
+    public async Task<bool> SaveScoringWeightsAsync(
+        string campaignId,
+        string? scoringWeightsJson,
+        DateTimeOffset updatedAt,
+        CancellationToken cancellationToken)
+    {
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+
+        var campaign = await context.Campaigns
+            .FirstOrDefaultAsync(row => row.Id == campaignId, cancellationToken)
+            .ConfigureAwait(false);
+        if (campaign is null)
+        {
+            return false;
+        }
+
+        campaign.ScoringWeightsJson = scoringWeightsJson;
+        campaign.UpdatedAt = updatedAt;
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        return true;
+    }
+
     public async Task<CampaignCounts> GetCountsAsync(string campaignId, CancellationToken cancellationToken)
     {
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
+        // Duplicates are left out, as they are in list_leads: a 'duplicate' row is provenance for §7.2's
+        // merge, not a prospect, and counting it would make this breakdown disagree with both
+        // find_candidates' 'stored' and the list the marketer actually pages through.
         var byStatus = await context.Leads
             .AsNoTracking()
-            .Where(lead => lead.CampaignId == campaignId)
+            .Where(lead => lead.CampaignId == campaignId && lead.Status != LeadStatuses.Duplicate)
             .GroupBy(lead => lead.Status)
             .Select(group => new { Status = group.Key, Leads = group.Count() })
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        // Scored leads only: an unscored lead is in no tier, and a null key would read as one. Duplicates
+        // are excluded for the same reason as in byStatus - today nothing scores one, so the filter is
+        // belt-and-braces, but a breakdown that is correct only by coincidence is one chunk away from not
+        // being correct.
+        var byTier = await context.Leads
+            .AsNoTracking()
+            .Where(lead => lead.CampaignId == campaignId
+                && lead.Tier != null
+                && lead.Status != LeadStatuses.Duplicate)
+            .GroupBy(lead => lead.Tier!)
+            .Select(group => new { Tier = group.Key, Leads = group.Count() })
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
@@ -151,10 +196,9 @@ public sealed class EfCampaignStore(IDbContextFactory<ProspectDbContext> context
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
 
-        // byTier stays empty until scoring fills it (C6).
         return new CampaignCounts(
             byStatus.ToDictionary(row => row.Status, row => row.Leads, StringComparer.Ordinal),
-            new Dictionary<string, int>(StringComparer.Ordinal),
+            byTier.ToDictionary(row => row.Tier, row => row.Leads, StringComparer.Ordinal),
             byDealer);
     }
 }

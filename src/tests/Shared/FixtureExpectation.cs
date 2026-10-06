@@ -42,13 +42,19 @@ internal sealed class SampleProfile
         HashSet<string> excludedCategories,
         Regex keywords,
         Regex? excludedKeywords,
-        double minConfidence)
+        double minConfidence,
+        int? minEmployees,
+        IReadOnlyDictionary<string, string> segmentByCategory,
+        IReadOnlyDictionary<string, int> segmentMinEmployees)
     {
+        SegmentMinEmployees = segmentMinEmployees;
         Categories = categories;
         ExcludedCategories = excludedCategories;
         _keywords = keywords;
         _excludedKeywords = excludedKeywords;
         MinConfidence = minConfidence;
+        MinEmployees = minEmployees;
+        SegmentByCategory = segmentByCategory;
     }
 
     public HashSet<string> Categories { get; }
@@ -56,6 +62,21 @@ internal sealed class SampleProfile
     public HashSet<string> ExcludedCategories { get; }
 
     public double MinConfidence { get; }
+
+    /// <summary>
+    /// The profile's <c>size.employeesMin</c>, which technical-design §7.6's <c>sizeFit</c> compares a
+    /// research <c>employeeEstimate</c> against. Null when the profile sets none.
+    /// </summary>
+    public int? MinEmployees { get; }
+
+    /// <summary>Each segment's name by the Overture category that reaches it, for <c>list_leads.segment</c>.</summary>
+    public IReadOnlyDictionary<string, string> SegmentByCategory { get; }
+
+    /// <summary>
+    /// The segments that set their own <c>minEmployees</c>, by segment name. §7.6's <c>sizeFit</c> prefers
+    /// one of these over <see cref="MinEmployees"/>, which is why the fixture profile sets one.
+    /// </summary>
+    public IReadOnlyDictionary<string, int> SegmentMinEmployees { get; }
 
     public static SampleProfile Load()
     {
@@ -65,13 +86,34 @@ internal sealed class SampleProfile
 
         var exclusions = root.GetProperty("exclusions");
 
+        var segmentByCategory = new Dictionary<string, string>(StringComparer.Ordinal);
+        var segmentMinEmployees = new Dictionary<string, int>(StringComparer.Ordinal);
+        foreach (var segment in segments)
+        {
+            var name = segment.GetProperty("name").GetString() ?? string.Empty;
+            foreach (var category in Strings(segment, "overtureCategories"))
+            {
+                segmentByCategory.TryAdd(category, name);
+            }
+
+            if (segment.TryGetProperty("minEmployees", out var segmentMinimum))
+            {
+                segmentMinEmployees[name] = segmentMinimum.GetInt32();
+            }
+        }
+
         return new SampleProfile(
             [.. segments.SelectMany(segment => Strings(segment, "overtureCategories"))],
             [.. Strings(exclusions, "overtureCategories")],
             Alternation([.. segments.SelectMany(segment => Strings(segment, "keywords"))])
                 ?? throw new InvalidOperationException("the sample profile has no keywords at all."),
             Alternation([.. Strings(exclusions, "keywords")]),
-            root.TryGetProperty("minConfidence", out var floor) ? floor.GetDouble() : 0.6);
+            root.TryGetProperty("minConfidence", out var floor) ? floor.GetDouble() : 0.6,
+            root.TryGetProperty("size", out var size) && size.TryGetProperty("employeesMin", out var minimum)
+                ? minimum.GetInt32()
+                : null,
+            segmentByCategory,
+            segmentMinEmployees);
     }
 
     /// <summary>In scope: inside the Houston CBSA and at or above the profile's confidence floor.</summary>
