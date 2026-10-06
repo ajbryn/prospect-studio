@@ -108,6 +108,24 @@ public sealed class Lead
 
     public string? SuppressionReason { get; set; }
 
+    /// <summary>
+    /// The <c>suppression</c> row that matched (§7.3: "store the reason <strong>and</strong> the
+    /// matching row id"), so a suppression can be explained rather than only reported.
+    /// </summary>
+    public string? SuppressionId { get; set; }
+
+    /// <summary>
+    /// The status this lead held before suppression took it, so releasing it gives that status back
+    /// (§7.3). Null when the lead has never been suppressed, which releases it as a plain candidate.
+    /// </summary>
+    /// <remarks>
+    /// Suppression applies whatever the status is, <c>approved</c> included - a do-not-contact row
+    /// arriving after approval is the case the list exists for. Without this column the round trip
+    /// (suppress an approved lead, then drop the row from the list) would hand it back as a candidate
+    /// and throw away a decision a person made, silently.
+    /// </remarks>
+    public string? PreSuppressionStatus { get; set; }
+
     public string? DealerId { get; set; }
 
     public string? BranchId { get; set; }

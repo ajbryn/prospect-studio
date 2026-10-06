@@ -176,6 +176,64 @@ public class CandidateStoreTests
     }
 
     [Fact]
+    public async Task Clearing_candidates_without_research_also_clears_suppressed_leads()
+    {
+        // The trap C4's review recorded and C5 makes real. Once apply_suppression sets status
+        // 'suppressed', those leads are ALSO leads without research, so a clear that only looks for
+        // 'candidate' and 'duplicate' leaves them behind. Then `replace: true` with a narrower
+        // geography or a different profile keeps stale suppressed rows from the previous scope, and
+        // find_candidates' suppressed breakdown counts companies that are no longer in the search at
+        // all - a number that only ever grows and that nothing else in the system would contradict.
+        //
+        // The three machine-written statuses go; the statuses that record a human decision stay, because
+        // 'replace' is about redoing a search, not about discarding the marketer's review.
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+        using var directory = new TempDirectory();
+        await using var database = TempDatabase.In(directory.Path);
+        var store = await PrepareAsync(database, timeout.Token);
+
+        await store.StoreAsync(
+            CampaignId,
+            [Group("fx_0015", 0.93), Group("fx_0016", 0.90), Group("fx_0001", 0.95), Group("fx_0002", 0.90)],
+            timeout.Token);
+
+        await SetStatusAsync(database, "fx_0015", LeadStatuses.Suppressed, timeout.Token);
+        await SetStatusAsync(database, "fx_0016", LeadStatuses.Approved, timeout.Token);
+
+        var cleared = await store.ClearCandidatesWithoutResearchAsync(CampaignId, timeout.Token);
+
+        cleared.ShouldBe(
+            3,
+            "the two plain candidates and the suppressed one. A suppressed lead has no research either, "
+            + "so leaving it behind is what makes a replace re-run report suppression counts from a "
+            + "search that no longer exists.");
+
+        var left = await store.ListLeadsAsync(CampaignId, timeout.Token);
+
+        left.Select(lead => lead.OvertureId).ToList().ShouldBe(
+            ["fx_0016"],
+            "only the approved lead survives: that status is a decision somebody made, and clearing it "
+            + "would silently undo their review.");
+    }
+
+    /// <summary>Puts one lead into a status <c>find_candidates</c> cannot write on its own.</summary>
+    private static async Task SetStatusAsync(
+        TempDatabase database,
+        string overtureId,
+        string status,
+        CancellationToken cancellationToken)
+    {
+        await using var context = await database.CreateContextAsync(cancellationToken);
+
+        var site = await context.Sites.SingleAsync(row => row.OvertureId == overtureId, cancellationToken);
+        var lead = await context.Leads
+            .SingleAsync(row => row.CampaignId == CampaignId && row.SiteId == site.Id, cancellationToken);
+
+        lead.Status = status;
+        await context.SaveChangesAsync(cancellationToken);
+    }
+
+    [Fact]
     public async Task Five_thousand_candidates_are_written_in_batches_not_one_row_at_a_time()
     {
         // technical-design §5.3 "Bulk writes": batches of about 500 through SaveChangesAsync with

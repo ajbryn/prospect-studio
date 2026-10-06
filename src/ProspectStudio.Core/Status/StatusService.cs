@@ -1,4 +1,5 @@
 using ProspectStudio.Core.Configuration;
+using ProspectStudio.Core.Dealers;
 using ProspectStudio.Core.Reference;
 
 namespace ProspectStudio.Core.Status;
@@ -13,11 +14,40 @@ namespace ProspectStudio.Core.Status;
 /// actually on disk from C4 onward, instead of the placeholder C0 shipped (mcp-tools.md
 /// §find_candidates). Optional: without it the report says no extract is prepared.
 /// </param>
+/// <param name="dealers">
+/// Counts the three business lists, so <c>ready.dealers</c>, <c>ready.territories</c> and
+/// <c>ready.suppression</c> are facts from C5 onward instead of the zeroes C0 shipped - it is how a
+/// skill knows whether <c>import_list</c> still has to run. Optional, and only
+/// <see cref="GetStatusAsync"/> reads it: <see cref="GetStatus"/> stays synchronous and reports zeroes.
+/// </param>
 public sealed class StatusService(
     PsOptions options,
     IReferenceDataInventory? referenceData = null,
-    IOvertureDataInventory? overture = null)
+    IOvertureDataInventory? overture = null,
+    IDealerStore? dealers = null)
 {
+    /// <summary>The report with the list counts read from the database (mcp-tools.md §get_status).</summary>
+    public async Task<StatusReport> GetStatusAsync(CancellationToken cancellationToken)
+    {
+        var report = GetStatus();
+        if (dealers is null)
+        {
+            return report;
+        }
+
+        var counts = await dealers.CountListsAsync(cancellationToken).ConfigureAwait(false);
+
+        return report with
+        {
+            Ready = report.Ready with
+            {
+                Dealers = counts.Dealers,
+                Territories = counts.Territories,
+                Suppression = counts.Suppression,
+            },
+        };
+    }
+
     public StatusReport GetStatus()
     {
         var warnings = new List<string>();

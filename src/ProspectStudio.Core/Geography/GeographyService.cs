@@ -1,4 +1,5 @@
 using System.Globalization;
+using ProspectStudio.Core.Dealers;
 
 namespace ProspectStudio.Core.Geography;
 
@@ -7,8 +8,18 @@ namespace ProspectStudio.Core.Geography;
 /// turn a place name or one of the explicit input forms into a flat <c>GeoScope</c>, with
 /// <c>alternatives</c> when the name could mean several places.
 /// </summary>
-public sealed class GeographyService(IGeographyReference reference, IAddressGeocoder geocoder)
+/// <param name="dealers">
+/// The dealer lists, for scope type <c>dealer</c> (§6.2). Optional: without it that type is still
+/// <c>UNSUPPORTED</c>, which is what C2 through C4 reported.
+/// </param>
+public sealed class GeographyService(
+    IGeographyReference reference,
+    IAddressGeocoder geocoder,
+    IDealerStore? dealers = null)
 {
+    /// <summary>The <c>dealer:&lt;id&gt;</c> query form technical-design §6.2 documents.</summary>
+    private const string DealerQueryPrefix = "dealer:";
+
     /// <summary>A prefix has to be this long before it may stand for a longer place name.</summary>
     private const int MinimumPrefixLength = 4;
 
@@ -56,21 +67,26 @@ public sealed class GeographyService(IGeographyReference reference, IAddressGeoc
         return type switch
         {
             GeoScopeTypes.Radius => await RadiusScopeAsync(request, cancellationToken).ConfigureAwait(false),
-            GeoScopeTypes.Dealer => throw new GeographyUnsupportedException(
-                "Dealer territories are not available yet."),
             _ when values.Count == 0 => throw new GeographyRequestException(
                 $"Type '{type}' needs at least one value."),
             GeoScopeTypes.State => await StateScopeAsync(ParseStates(values), cancellationToken).ConfigureAwait(false),
             GeoScopeTypes.Counties => await CountyValuesScopeAsync(values, cancellationToken).ConfigureAwait(false),
             GeoScopeTypes.Cbsa => await CbsaValuesScopeAsync(values, cancellationToken).ConfigureAwait(false),
             GeoScopeTypes.Zips => await ZipsScopeAsync(ParseZips(values), cancellationToken).ConfigureAwait(false),
+            GeoScopeTypes.Dealer => await DealerScopeAsync(values, cancellationToken).ConfigureAwait(false),
             _ => throw new GeographyRequestException(
-                $"'{request.Type}' is not a geography type. Use state, counties, cbsa, zips or radius."),
+                $"'{request.Type}' is not a geography type. Use state, counties, cbsa, zips, radius or dealer."),
         };
     }
 
     private async Task<ResolvedGeography> ResolveQueryAsync(string query, CancellationToken cancellationToken)
     {
+        if (query.StartsWith(DealerQueryPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            return await DealerScopeAsync([query[DealerQueryPrefix.Length..].Trim()], cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         if (UsStates.Find(query) is { } state)
         {
             return await StateScopeAsync([state], cancellationToken).ConfigureAwait(false);
@@ -272,7 +288,11 @@ public sealed class GeographyService(IGeographyReference reference, IAddressGeoc
             await BboxAsync(fips, cancellationToken).ConfigureAwait(false));
     }
 
-    private async Task<ResolvedGeography> ZipsScopeAsync(
+    /// <summary>
+    /// The counties the ZCTA file puts these ZIPs in, and the ZIPs it knows nothing about. A ZCTA can
+    /// span several counties, so this is a union rather than a mapping.
+    /// </summary>
+    private async Task<(SortedSet<string> Fips, List<string> Unknown)> CountiesForZipsAsync(
         IReadOnlyList<string> zips,
         CancellationToken cancellationToken)
     {
@@ -297,6 +317,15 @@ public sealed class GeographyService(IGeographyReference reference, IAddressGeoc
             }
         }
 
+        return (fips, unknown);
+    }
+
+    private async Task<ResolvedGeography> ZipsScopeAsync(
+        IReadOnlyList<string> zips,
+        CancellationToken cancellationToken)
+    {
+        var (fips, unknown) = await CountiesForZipsAsync(zips, cancellationToken).ConfigureAwait(false);
+
         if (fips.Count == 0)
         {
             throw new GeographyNotFoundException(
@@ -320,6 +349,71 @@ public sealed class GeographyService(IGeographyReference reference, IAddressGeoc
                 ? null
                 : [$"No ZIP code tabulation area matches {string.Join(", ", unknown)}."]);
     }
+
+    /// <summary>
+    /// Technical-design §6.2: "dealer: <c>dealer:&lt;id&gt;</c> → union of its territory ZIPs and
+    /// counties." The ZIPs are also expanded into the counties that hold them, the same way a
+    /// <c>zips</c> scope is: §6.3's candidate query reads the Parquet by county, so a ZIP override in a
+    /// county no rule names would otherwise be unsearchable. The precise ZIPs stay in
+    /// <see cref="ResolvedGeography.Zips"/> for the address filter.
+    /// </summary>
+    private async Task<ResolvedGeography> DealerScopeAsync(
+        IReadOnlyList<string> values,
+        CancellationToken cancellationToken)
+    {
+        if (dealers is null)
+        {
+            throw new GeographyUnsupportedException("Dealer territories are not available in this server.");
+        }
+
+        var scopes = new List<DealerTerritoryScope>();
+        foreach (var value in values)
+        {
+            scopes.Add(
+                await dealers.FindTerritoryScopeAsync(value, cancellationToken).ConfigureAwait(false)
+                ?? throw new GeographyNotFoundException(
+                    $"No dealer '{value}' has been imported.",
+                    "Use list_dealers to see the dealers that exist, or import_list to add them."));
+        }
+
+        var zips = scopes
+            .SelectMany(scope => scope.Zips)
+            .Distinct(StringComparer.Ordinal)
+            .Order(StringComparer.Ordinal)
+            .ToList();
+
+        var fips = new SortedSet<string>(scopes.SelectMany(scope => scope.CountyFips), StringComparer.Ordinal);
+        var (zipCounties, unknown) = await CountiesForZipsAsync(zips, cancellationToken).ConfigureAwait(false);
+        fips.UnionWith(zipCounties);
+
+        if (fips.Count == 0)
+        {
+            throw new GeographyNotReadyException(
+                $"{Label(scopes)} has no territory rows, so there is no area to search.",
+                "Run import_list for territories first.");
+        }
+
+        var countyFips = fips.ToList();
+
+        return new ResolvedGeography(
+            GeoScopeTypes.Dealer,
+            Label(scopes),
+            Cbsa: null,
+            StatesOf(countyFips),
+            countyFips,
+            zips,
+            Radius: null,
+            await BboxAsync(countyFips, cancellationToken).ConfigureAwait(false),
+            Alternatives: null,
+            Warnings: unknown.Count == 0
+                ? null
+                : [$"No ZIP code tabulation area matches {string.Join(", ", unknown)}."]);
+    }
+
+    private static string Label(IReadOnlyList<DealerTerritoryScope> scopes) =>
+        scopes.Count == 1
+            ? $"{scopes[0].DealerName} territory"
+            : $"{scopes.Count} dealer territories";
 
     private async Task<ResolvedGeography> RadiusScopeAsync(
         GeoResolveRequest request,

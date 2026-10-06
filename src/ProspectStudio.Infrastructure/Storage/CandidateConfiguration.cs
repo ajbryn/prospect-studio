@@ -120,6 +120,16 @@ public sealed class LeadConfiguration : IEntityTypeConfiguration<Lead>
         builder.Property(lead => lead.SiteId).HasColumnName("site_id").HasMaxLength(32).IsRequired();
         builder.Property(lead => lead.Status).HasColumnName("status").HasMaxLength(20).IsRequired();
         builder.Property(lead => lead.SuppressionReason).HasColumnName("suppression_reason").HasMaxLength(20);
+
+        // §7.3 stores the matching row id as well as the reason. It is a plain column, not a foreign
+        // key: a re-imported list is upserted, so a lead must keep pointing at the row that matched it
+        // even if that row is later edited out of the file.
+        builder.Property(lead => lead.SuppressionId).HasColumnName("suppression_id").HasMaxLength(32);
+
+        // What releasing a lead from suppression restores it to, so an approval survives the round trip.
+        builder.Property(lead => lead.PreSuppressionStatus)
+            .HasColumnName("pre_suppression_status")
+            .HasMaxLength(20);
         builder.Property(lead => lead.DealerId).HasColumnName("dealer_id").HasMaxLength(32);
         builder.Property(lead => lead.BranchId).HasColumnName("branch_id").HasMaxLength(32);
         builder.Property(lead => lead.Assignment).HasColumnName("assignment").HasMaxLength(10);

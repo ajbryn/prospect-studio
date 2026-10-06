@@ -1,7 +1,9 @@
+using System.Data.Common;
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using ProspectStudio.Core;
 using ProspectStudio.Core.Configuration;
+using ProspectStudio.Core.Dealers;
 using ProspectStudio.Core.Reference;
 using ProspectStudio.Core.Status;
 using ProspectStudio.Infrastructure.Overture;
@@ -26,7 +28,7 @@ public static class CliVerbs
 
         return args[0].ToLowerInvariant() switch
         {
-            "doctor" => Doctor(options),
+            "doctor" => await DoctorAsync(options, cancellationToken).ConfigureAwait(false),
             "setup" => await SetupAsync(args, options, cancellationToken).ConfigureAwait(false),
             "help" or "--help" or "-h" or "/?" => Help(0),
             _ => Unknown(args[0]),
@@ -203,11 +205,19 @@ public static class CliVerbs
         }
     }
 
-    private static int Doctor(PsOptions options)
+    private static async Task<int> DoctorAsync(PsOptions options, CancellationToken cancellationToken)
     {
         var reference = new ReferenceDataFiles(options.ReferenceDataDirectory);
         var overture = new OvertureDataFiles(options.OvertureDirectory, options.OvertureRelease);
-        var status = new StatusService(options, reference, overture).GetStatus();
+
+        // The same readiness report get_status returns, list counts and all: two tools disagreeing
+        // about how many dealers are imported would make a user distrust both.
+        await using var services = new ServiceCollection()
+            .AddProspectStudioStorage(options.DatabasePath)
+            .BuildServiceProvider();
+
+        var status = await ReadinessAsync(options, reference, overture, services, cancellationToken)
+            .ConfigureAwait(false);
 
         Console.WriteLine($"prospect-studio {status.Version}");
         Console.WriteLine();
@@ -264,6 +274,39 @@ public static class CliVerbs
         }
 
         return 0;
+    }
+
+    /// <summary>
+    /// The readiness report with the business-list counts, falling back to the counts-free report when
+    /// the database cannot be read. <c>doctor</c> is what a user runs <em>because</em> something is
+    /// wrong, so a database that is missing or not yet migrated has to produce a report rather than a
+    /// stack trace.
+    /// </summary>
+    private static async Task<StatusReport> ReadinessAsync(
+        PsOptions options,
+        ReferenceDataFiles reference,
+        OvertureDataFiles overture,
+        IServiceProvider services,
+        CancellationToken cancellationToken)
+    {
+        var status = new StatusService(options, reference, overture);
+
+        if (!File.Exists(options.DatabasePath))
+        {
+            return status.GetStatus();
+        }
+
+        try
+        {
+            return await new StatusService(options, reference, overture, services.GetService<IDealerStore>())
+                .GetStatusAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (DbException exception)
+        {
+            Console.Error.WriteLine($"  (list counts unavailable: {exception.Message})");
+            return status.GetStatus();
+        }
     }
 
     /// <summary>

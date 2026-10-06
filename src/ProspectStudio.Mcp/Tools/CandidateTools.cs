@@ -16,7 +16,7 @@ namespace ProspectStudio.Mcp.Tools;
 public sealed class CandidateTools(CandidateSearchService candidates)
 {
     [McpServerTool(Name = "find_candidates")]
-    [Description("Finds candidate companies for a campaign from the local Overture Places extract: scopes them to the campaign's geography, matches the search profile's Overture categories and name keywords, applies the profile's exclusions, deduplicates, and stores them as leads. Returns counts and a small sample, not every row. Re-running with the same inputs changes nothing. Needs an Overture extract, so run prepare_data for the states first.")]
+    [Description("Finds candidate companies for a campaign from the local Overture Places extract: scopes them to the campaign's geography, matches the search profile's Overture categories and name keywords, applies the profile's exclusions, deduplicates, stores them as leads, removes the ones on the suppression list and routes the rest to their local dealer. Returns counts by category, dealer and suppression reason plus a small sample, not every row. Re-running with the same inputs changes nothing. Needs an Overture extract, so run prepare_data for the states first.")]
     public async ValueTask<CallToolResult> FindCandidatesAsync(
         [Description("The campaign to store the candidates in, for example \"cmp_7Q3KXM\".")]
         string campaignId,
@@ -70,7 +70,8 @@ public sealed class CandidateTools(CandidateSearchService candidates)
             throw new McpToolException(
                 ToolErrorCodes.NotFound,
                 exception.Message,
-                "Try a more specific form, such as 'Harris County, TX', 'Houston metro' or a ZIP code.");
+                exception.Hint
+                ?? "Try a more specific form, such as 'Harris County, TX', 'Houston metro' or a ZIP code.");
         }
         catch (GeographyRequestException exception)
         {
@@ -84,7 +85,7 @@ public sealed class CandidateTools(CandidateSearchService candidates)
             throw new McpToolException(
                 ToolErrorCodes.Unsupported,
                 exception.Message,
-                "Dealer territories arrive in chunk C5; pass the dealer's counties or ZIPs instead.");
+                "Pass the dealer's counties or ZIPs instead.");
         }
         catch (GeographyExternalException exception)
         {

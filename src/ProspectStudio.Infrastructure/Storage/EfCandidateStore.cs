@@ -177,37 +177,28 @@ public sealed class EfCandidateStore(IDbContextFactory<ProspectDbContext> contex
         return await query.ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<IReadOnlyDictionary<string, string>> FindLeadIdsAsync(
+    public async Task<IReadOnlyList<CandidateSample>> SampleCandidatesAsync(
         string campaignId,
-        IReadOnlyList<string> overtureIds,
+        int limit,
         CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(overtureIds);
-
-        var found = new Dictionary<string, string>(StringComparer.Ordinal);
-        if (overtureIds.Count == 0)
-        {
-            return found;
-        }
+        ArgumentOutOfRangeException.ThrowIfLessThan(limit, 1);
 
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
 
-        for (var offset = 0; offset < overtureIds.Count; offset += LookupSize)
-        {
-            var slice = overtureIds.Skip(offset).Take(LookupSize).ToList();
+        var query = from lead in context.Leads.AsNoTracking()
+                    join site in context.Sites.AsNoTracking() on lead.SiteId equals site.Id
+                    where lead.CampaignId == campaignId && lead.Status == LeadStatuses.Candidate
+                    orderby site.Confidence descending, site.OvertureId
+                    select new CandidateSample(
+                        lead.Id,
+                        site.Name,
+                        site.TaxonomyPrimary,
+                        site.City,
+                        site.Zip,
+                        site.Confidence);
 
-            var query = from lead in context.Leads.AsNoTracking()
-                        join site in context.Sites.AsNoTracking() on lead.SiteId equals site.Id
-                        where lead.CampaignId == campaignId && slice.Contains(site.OvertureId)
-                        select new { site.OvertureId, lead.Id };
-
-            foreach (var row in await query.ToListAsync(cancellationToken).ConfigureAwait(false))
-            {
-                found[row.OvertureId] = row.Id;
-            }
-        }
-
-        return found;
+        return await query.Take(limit).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<int> ClearCandidatesWithoutResearchAsync(
@@ -218,9 +209,15 @@ public sealed class EfCandidateStore(IDbContextFactory<ProspectDbContext> contex
 
         // Set-based, per technical-design §5.3. The research table arrives in C6; until then every lead
         // find_candidates created is one without research.
+        //
+        // A suppressed lead goes too. It has no research either, and leaving it behind is what would
+        // make a replace re-run with a narrower geography report suppression counts from a search that
+        // no longer exists. The statuses a person decided - approved above all - are what this spares.
         return await context.Leads
             .Where(lead => lead.CampaignId == campaignId
-                && (lead.Status == LeadStatuses.Candidate || lead.Status == LeadStatuses.Duplicate))
+                && (lead.Status == LeadStatuses.Candidate
+                    || lead.Status == LeadStatuses.Duplicate
+                    || lead.Status == LeadStatuses.Suppressed))
             .ExecuteDeleteAsync(cancellationToken)
             .ConfigureAwait(false);
     }

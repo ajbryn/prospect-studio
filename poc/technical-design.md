@@ -169,7 +169,7 @@ Documents\Prospect Studio\
 | `companies` | id, name, name_norm, domain |
 | `sites` | id, company_id, overture_id (unique), name, address, city, state, zip, county_fips, lat, lon, phone, website, taxonomy_primary, taxonomy_path, basic_category, confidence, release |
 | `source_records` | id, site_id, source, source_id, retrieved_at, license, payload_json |
-| `leads` | (campaign_id, id `L0001`), site_id, status (`candidate`,`suppressed`,`duplicate`,`review`,`approved`,`rejected`,`hold`), suppression_reason, dealer_id, branch_id, assignment (`auto`/`override`/`gap`), features_json, score, tier, score_breakdown_json, research_status (`none`/`saved`/`no_signal`), notes, contact_name, contact_title, cohort, updated_at |
+| `leads` | (campaign_id, id `L0001`), site_id, status (`candidate`,`suppressed`,`duplicate`,`review`,`approved`,`rejected`,`hold`), suppression_reason, **suppression_id** (which suppression row matched, so a suppression can be explained), **pre_suppression_status** (the status suppression took the lead from, so releasing it gives that status back instead of silently spending an `approved`; null for a lead that has never been suppressed), dealer_id, branch_id, assignment (`auto`/`override`/`gap`), features_json, score, tier, score_breakdown_json, research_status (`none`/`saved`/`no_signal`), notes, contact_name, contact_title, cohort, updated_at |
 | `web_pages` | site_id, url, fetched_at, http_status, robots_allowed, text_excerpt (≤ 4,000 chars), keywords_json |
 | `research` | campaign_id, lead_id, research_json, llm_adjustment, saved_at |
 | `signals` | id, campaign_id, lead_id, type, text, url, date |
@@ -248,7 +248,7 @@ COPY (
 - **cbsa / metro:** fuzzy title match on the CBSA file ("Houston metro" → 26420).
 - **zip list:** ZIPs → counties via ZCTA file (for the bbox); the candidate filter uses the address postcode.
 - **radius:** lat/lon (or an address via the Census geocoder) + miles → the counties intersecting the circle; the filter uses distance.
-- **dealer:** `dealer:<id>` → union of its territory ZIPs and counties.
+- **dealer:** `dealer:<id>` (or `{type:"dealer", values:["gulf"]}`) → union of its territory ZIPs and counties. **The ZIP rules are also expanded into their counties**, because the Parquet query filters by county: without that, a dealer whose claim on a county is purely by ZIP (as `bay` is on Harris) would have those ZIPs unsearchable. The ZIPs stay in `zips` so the precise postcode filter still applies. An unknown dealer id is `NOT_FOUND`.
 
 ### 6.3 Candidate query (local Parquet)
 
@@ -296,6 +296,10 @@ Keep the highest-confidence record as the lead. Mark the others `duplicate` and 
 
 ### 7.3 Suppression
 A lead is suppressed if any suppression row matches by **domain**, by **exact `name_norm`** (with the same ZIP when the row has one), or by **fuzzy name ≥ 0.92 with the same ZIP**. Store the reason and the matching row id. Dealers and competitors are suppression reasons like any other.
+
+**Suppression is reversible, and reversing it must not discard a decision.** When a lead is suppressed, record the status it was suppressed from in `pre_suppression_status`; when the list stops naming it, restore that status rather than resetting to `candidate`. An already-suppressed lead keeps what it remembers, so repeated runs cannot erode it. Without this, adding a `dnc` row and later removing it silently destroys an approval.
+
+**The ZIP requirement on the fuzzy rule is unconditional** — a suppression row with no ZIP never fuzzy-matches. Read that literally and deliberately: a false suppression silently deletes a real prospect, which is worse than a missed one, so an unanchored fuzzy name match is not worth the risk.
 
 ### 7.4 Territory assignment
 ZIP5 match (`level=zip`) wins; otherwise county FIPS (`level=county`). Ties: lowest `priority`, then the nearest branch (haversine). No match → `assignment=gap`, `dealer_id=null`. Manual overrides (`update_leads`, workbook) set `assignment=override` and are never overwritten by re-assignment.

@@ -42,6 +42,7 @@ try
     builder.Services.AddSingleton<TimeProvider>(TimeProvider.System);
     builder.Services.AddSingleton<StatusService>();
     builder.Services.AddProspectStudioStorage(options.DatabasePath);
+    builder.Services.AddProspectStudioLists(options);
     builder.Services.AddProspectStudioReferenceData(options);
     builder.Services.AddProspectStudioOverture(options);
     builder.Services.AddProspectStudioMarketSizing(options);

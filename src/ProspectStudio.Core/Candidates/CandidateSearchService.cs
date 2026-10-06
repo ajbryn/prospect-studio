@@ -1,5 +1,6 @@
 using System.Text.Json;
 using ProspectStudio.Core.Campaigns;
+using ProspectStudio.Core.Dealers;
 using ProspectStudio.Core.Geography;
 using ProspectStudio.Core.Reference;
 
@@ -7,12 +8,14 @@ namespace ProspectStudio.Core.Candidates;
 
 /// <summary>
 /// The rules behind <c>find_candidates</c> (mcp-tools.md §find_candidates, technical-design §6.3 and
-/// §7.1-7.2): resolve the scope, read the targets and exclusions off the saved profile, query the
-/// local extract per state, normalize and dedupe, store, and hand back a compact summary.
+/// §7.1-7.4): resolve the scope, read the targets and exclusions off the saved profile, query the
+/// local extract per state, normalize and dedupe, store, suppress, route to dealers, and hand back a
+/// compact summary.
 /// </summary>
 public sealed class CandidateSearchService(
     ICampaignStore campaigns,
     ICandidateStore candidates,
+    ILeadRoutingStore routing,
     IPlacesSource places,
     IOvertureDataInventory overture,
     GeographyService geography,
@@ -91,14 +94,20 @@ public sealed class CandidateSearchService(
 
         await candidates.StoreAsync(campaign.Id, groups, cancellationToken).ConfigureAwait(false);
 
-        // Only the sampled primaries need a lead id, so the ids are asked for by name rather than by
-        // reading every lead the campaign holds.
-        var sampled = Sample(groups);
-        var leadIds = await candidates
-            .FindLeadIdsAsync(
-                campaign.Id,
-                [.. sampled.Select(group => group.Primary.OvertureId)],
-                cancellationToken)
+        // Suppression before assignment, so a company that is never going to be mailed is not counted
+        // under a dealer. The two are order-independent either way (§7.3, §7.4), which is what lets a
+        // skill call the tools separately and reach the same state.
+        var suppression = await routing
+            .ApplySuppressionAsync(campaign.Id, cancellationToken)
+            .ConfigureAwait(false);
+        var assignment = await routing
+            .AssignDealersAsync(campaign.Id, cancellationToken)
+            .ConfigureAwait(false);
+
+        // The sample is read back from the database rather than taken off the groups, so a company that
+        // suppression has just removed is never offered as an example.
+        var sampled = await candidates
+            .SampleCandidatesAsync(campaign.Id, SampleSize, cancellationToken)
             .ConfigureAwait(false);
 
         var duplicates = groups.Sum(group => group.Duplicates.Count);
@@ -107,13 +116,13 @@ public sealed class CandidateSearchService(
             Found: groups.Count + duplicates,
             Stored: groups.Count,
             Duplicates: duplicates,
-            // Suppression and dealer assignment are C5; the keys are present and empty, because an
-            // absent key reads differently from an empty one (mcp-tools.md §find_candidates).
-            Suppressed: new Dictionary<string, int>(StringComparer.Ordinal),
-            CoverageGaps: 0,
+            Suppressed: suppression.ByReason,
+            CoverageGaps: assignment.Gaps,
             ByCategory: ByCategory(groups),
-            ByDealer: [],
-            Sample: Describe(sampled, leadIds));
+            // byDealer is shown to a person, so it carries the dealer's name rather than its id
+            // (mcp-tools.md §find_candidates shows "Gulf Lift Equipment").
+            ByDealer: [.. assignment.ByDealer.Select(row => new DealerCandidateCount(row.Name, row.Leads))],
+            Sample: sampled);
     }
 
     public async Task<IReadOnlyList<OvertureCategoryCount>> LookupCategoriesAsync(
@@ -210,25 +219,4 @@ public sealed class CandidateSearchService(
             .ThenBy(row => row.Category, StringComparer.Ordinal),
     ];
 
-    /// <summary>The handful of groups the summary shows, highest confidence first.</summary>
-    private static IReadOnlyList<CandidateGroup> Sample(IReadOnlyList<CandidateGroup> groups) =>
-    [
-        .. groups
-            .OrderByDescending(group => group.Primary.Confidence)
-            .ThenBy(group => group.Primary.OvertureId, StringComparer.Ordinal)
-            .Take(SampleSize),
-    ];
-
-    private static IReadOnlyList<CandidateSample> Describe(
-        IReadOnlyList<CandidateGroup> sampled,
-        IReadOnlyDictionary<string, string> leadIds) =>
-    [
-        .. sampled.Select(group => new CandidateSample(
-            leadIds.GetValueOrDefault(group.Primary.OvertureId, string.Empty),
-            group.Primary.Name,
-            group.Primary.TaxonomyPrimary,
-            group.Primary.City,
-            group.Primary.Zip,
-            group.Primary.Confidence)),
-    ];
 }
