@@ -34,6 +34,19 @@ public sealed class Campaign
     /// <summary>The resolved geography as opaque JSON text; never filtered inside.</summary>
     public string? GeoJson { get; set; }
 
+    /// <summary>
+    /// The effective scoring weights of the last <c>score_leads</c> run, as opaque JSON text
+    /// (technical-design §5.2), so <c>save_research</c> re-scores one lead on the same scale as the rest
+    /// of the list. Null for a campaign nothing has scored yet - an invented default would claim a scale
+    /// nobody chose.
+    /// </summary>
+    /// <remarks>
+    /// A record of the last run, not a sticky setting: a later <c>score_leads</c> with no <c>weights</c>
+    /// argument writes the profile's weights back here, so an override is always undone by re-running
+    /// without one.
+    /// </remarks>
+    public string? ScoringWeightsJson { get; set; }
+
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset UpdatedAt { get; set; }

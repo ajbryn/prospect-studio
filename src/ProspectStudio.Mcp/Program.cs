@@ -5,6 +5,7 @@ using ModelContextProtocol.Protocol;
 using ProspectStudio.Core;
 using ProspectStudio.Core.Campaigns;
 using ProspectStudio.Core.Jobs;
+using ProspectStudio.Core.Leads;
 using ProspectStudio.Core.SearchProfiles;
 using ProspectStudio.Core.Status;
 using ProspectStudio.Infrastructure.Census;
@@ -48,7 +49,9 @@ try
     builder.Services.AddProspectStudioMarketSizing(options);
     builder.Services.AddSingleton<ICampaignWorkspace, FileSystemCampaignWorkspace>();
     builder.Services.AddSingleton<SearchProfileValidator>();
+    builder.Services.AddSingleton<ResearchValidator>();
     builder.Services.AddSingleton<CampaignService>();
+    builder.Services.AddSingleton<LeadService>();
     builder.Services.AddSingleton(provider => new JobRunner(
         provider.GetRequiredService<IJobStore>(),
         provider.GetRequiredService<TimeProvider>(),

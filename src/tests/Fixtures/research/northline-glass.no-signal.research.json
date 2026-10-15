@@ -1,0 +1,10 @@
+{
+  "status": "no_signal",
+  "summary": "Small glass and glazing shop in Spring; the website is a single page with a phone number and no description of the work or the premises.",
+  "segment": "Electrical, HVAC & sign contractors",
+  "facilityFit": { "level": "unknown", "evidence": "Nothing on the site describes the premises." },
+  "signals": [],
+  "llmAdjustment": 0,
+  "rationale": "Nothing found beyond a one-page website: no permit, no job post, no employee count and no facility description, so there is no evidence either way.",
+  "sources": ["https://www.northlineglassandglazing.example"]
+}

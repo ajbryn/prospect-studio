@@ -133,5 +133,45 @@ public sealed class Lead
     /// <summary><c>auto</c>, <c>override</c> or <c>gap</c> (§7.4). Null until C5 assigns dealers.</summary>
     public string? Assignment { get; set; }
 
+    /// <summary>
+    /// The <see cref="Leads.LeadFeatures"/> §7.6 scored, as opaque JSON text. Null until the lead has
+    /// been scored; never filtered inside (CLAUDE.md), which is why <see cref="Score"/> and
+    /// <see cref="Tier"/> are columns of their own.
+    /// </summary>
+    public string? FeaturesJson { get; set; }
+
+    /// <summary>
+    /// 0-100 from §7.6, or null for a lead nothing has scored yet - including one <c>score_leads</c>
+    /// skipped. A 0 would read as "scored, and hopeless", and <c>save_research</c>'s <c>delta</c> is
+    /// specified as null rather than 0 for exactly that lead.
+    /// </summary>
+    public int? Score { get; set; }
+
+    /// <summary>One of <see cref="Leads.LeadTiers"/>, or null while <see cref="Score"/> is null.</summary>
+    public string? Tier { get; set; }
+
+    /// <summary>
+    /// The <see cref="Leads.ScoreBreakdown"/> that explains <see cref="Score"/>, as opaque JSON text:
+    /// every feature with its value, weight and contribution, the instant it was computed against, and
+    /// whether §7.6's tier-A cap bound.
+    /// </summary>
+    public string? ScoreBreakdownJson { get; set; }
+
+    /// <summary>
+    /// One of <see cref="Leads.ResearchStatuses"/>. <c>none</c> rather than null for a lead nobody has
+    /// researched, so <c>list_leads</c>' filter partitions every lead in the campaign.
+    /// </summary>
+    public string ResearchStatus { get; set; } = Leads.ResearchStatuses.None;
+
+    /// <summary>Whatever the marketer wants to remember about the lead (<c>update_leads</c>, the workbook).</summary>
+    public string? Notes { get; set; }
+
+    public string? ContactName { get; set; }
+
+    public string? ContactTitle { get; set; }
+
+    /// <summary>The cohort path from §7.8, e.g. <c>wave1/A</c>. Null until C13 assigns cohorts.</summary>
+    public string? Cohort { get; set; }
+
     public DateTimeOffset UpdatedAt { get; set; }
 }

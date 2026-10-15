@@ -29,11 +29,22 @@
     <Compile Include="..\Shared\FixtureExpectation.cs" Link="Candidates\FixtureExpectation.cs" />
     <Compile Include="..\Shared\PlacesDataFixture.cs" Link="Candidates\PlacesDataFixture.cs" />
     <Compile Include="..\Shared\FileFingerprint.cs" Link="Candidates\FileFingerprint.cs" />
+    <Compile Include="..\Shared\FixedTimeProvider.cs" Link="Leads\FixedTimeProvider.cs" />
+    <Compile Include="..\Shared\SampleResearch.cs" Link="Leads\SampleResearch.cs" />
+    <Compile Include="..\Shared\WorkedExamples.cs" Link="Leads\WorkedExamples.cs" />
   </ItemGroup>
 
-  <!-- The recorded Census CBP response bodies from src/tests/Fixtures/cbp (see its README) and the
-       Overture places fixtures from src/tests/Fixtures/places. Only those two subfolders: the Core
-       tests are pure logic and need no county geometry. -->
+  <!-- The recorded Census CBP response bodies from src/tests/Fixtures/cbp (see its README), the
+       Overture places fixtures from src/tests/Fixtures/places and the worked-example research
+       documents from src/tests/Fixtures/research. Only those three subfolders: the Core tests are
+       pure logic and need no county geometry. -->
+  <ItemGroup>
+    <Content Include="$(MSBuildThisFileDirectory)..\Fixtures\research\**\*"
+             Exclude="$(MSBuildThisFileDirectory)..\Fixtures\research\**\*.cs;$(MSBuildThisFileDirectory)..\Fixtures\research\**\*.md"
+             LinkBase="Fixtures\research"
+             CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <ItemGroup>
     <Content Include="$(MSBuildThisFileDirectory)..\Fixtures\cbp\**\*"
              Exclude="$(MSBuildThisFileDirectory)..\Fixtures\cbp\**\*.cs;$(MSBuildThisFileDirectory)..\Fixtures\cbp\**\*.md"

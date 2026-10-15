@@ -89,6 +89,7 @@ Output:
   { "campaignId": "cmp_7Q3KXM", "name": "Houston Scissor & Boom Lifts Q4", "folder": "...",
     "status": "draft", "product": "Scissor & boom lifts", "createdAt": "2026-09-30T14:02:11Z", "leads": 0 } ] }
 ```
+`leads` is the campaign's real lead count on the same basis as `get_campaign`'s `byStatus` — `duplicate` rows excluded — so the two tools cannot disagree about how many leads a campaign has.
 
 ### `get_campaign`
 Input: `{ "campaignId": "..." }`
@@ -98,7 +99,7 @@ Output:
   "status": "draft", "product": "Scissor & boom lifts",
   "profile": { "name": "…", "segments": 4, "geographyQuery": "Houston metro", "savedAt": "…" },
   "geoLabel": null,
-  "counts": { "byStatus": {}, "byTier": {}, "byDealer": [] },
+  "counts": { "byStatus": {}, "byTier": {}, "byDealer": [] },   // byStatus and byTier both omit `duplicate` rows, which are not leads; byTier is populated from C6 on
   "lastExportAt": null, "lastRenderAt": null }
 ```
 `profile` is `null` until `save_search_profile` runs. **`geoLabel` stays `null` until C4** — it is read from the campaign's stored `geo_json`, which `find_candidates` is the first thing to write. `resolve_geography` exists from C2, but `save_search_profile` deliberately does not call it: that would make saving a profile fail when reference data is missing, for a display-only field. Until then the raw query is available under `profile.geographyQuery`. Counts are empty objects/arrays for a new campaign, not absent. Errors: `NOT_FOUND`.
@@ -257,21 +258,32 @@ Output (compact rows):
   { "id": "L0001", "name": "Bayou Fulfillment Co.", "city": "Katy", "segment": "Warehousing & 3PL",
     "score": 92, "tier": "A", "dealer": "Gulf Lift", "status": "approved", "research": "saved", "topSignal": "Permit: 180k sq ft addition (2026-07)" } ] }
 ```
+`score` and `tier` are **`null` only when a lead has never been scored**. A lead that was scored and later suppressed **keeps and shows its score**: that is true, it is useful (suppressing a tier-A lead because it is already a customer is worth seeing), and it costs nothing in safety, since `status` says `suppressed` and the manifest excludes it. Nothing erases a score — `score_leads` skips suppressed leads rather than clearing them, so a release restores a usable lead.
+
+`topSignal` prefers a signal that **actually scored** — a buying signal inside the recency window — falling back to the most recent otherwise, with its date always shown. A row whose only signal is stale or `registry` contributed nothing, and the field should not imply it carried the score.
+
+`status` and `tier` take arrays; `dealerId` and `researchStatus` take a **single** value. `research` and the `researchStatus` filter share the three states of `leads.research_status` — `none`, `saved`, `no_signal` — kept distinct because a `no_signal` lead has been researched and can never reach tier A, so it must not look like a `saved` one. An unrecognised `sort` or `researchStatus` is `VALIDATION_FAILED`, never a silent default.
 
 ### `get_lead`
 Input: `{ "campaignId": "...", "leadId": "L0001", "includeWebExcerpt": false }`
-Output: full lead: site fields, provenance, features, `scoreBreakdown[]`, research, signals, dealer/branch, code, cohort, notes. If requested, a web excerpt (≤ 1,500 chars).
+Output: full lead: site fields, provenance, features, `scoreBreakdown[]`, research, signals, dealer/branch, `code`, `cohort`, notes. If requested, a web excerpt (≤ 1,500 chars). `code` (C11) and `cohort` (C13) are present and **`null`** until those chunks populate them, so the response shape does not change later. Alongside `scoreBreakdown[]` it carries **`scoreDetail`** (`baseScore`, `llmAdjustment`, `asOf`, `sizeMinimum`, `cappedFrom`): the per-feature rows explain the weighted sum, but not why the total differs from it, so without these a capped or adjusted score is the one thing §7.6 promises to explain and cannot. The web excerpt is likewise `null` until C7 fetches websites — C7 owns the 1,500-char cap and the test for it.
 
 ### `update_leads`
 Input: `{ "campaignId": "...", "updates": [ { "leadId": "L0007", "status": "approved", "dealerId": "bay", "notes": "Call first" } ] }`
 Output: `{ "updated": 1, "errors": [] }`
 
 ### `score_leads`
-Input: `{ "campaignId": "...", "weights": null }` → `{ "scored": 2890, "tiers": { "A": 12, "B": 140, "C": 2738 }, "weights": { ... } }`
+Input: `{ "campaignId": "...", "weights": null }` → `{ "scored": 2890, "skipped": 41, "tiers": { "A": 12, "B": 140, "C": 2738 }, "weights": { ... } }`
+
+Scores every lead except **`suppressed`** ones, which are never mailed; `skipped` counts them so the shortfall against the lead count is stated rather than left for the caller to notice. **`duplicate` rows are not leads at all** and appear in no lead-facing total — not `scored`, not `skipped`, not `get_campaign`'s `byStatus`, and not an unfiltered `list_leads` — unless a `status` filter names them explicitly. §7.3 keeps the highest-confidence record *as the lead* and marks the rest `duplicate`, and C4's arithmetic counts 83 leads from 86 rows, so a duplicate is provenance for the dedupe decision rather than a prospect. A suppressed lead is the opposite case: it is a real lead that compliance removed, it keeps the reason and the status suppression took it from, and it can be released — so it stays in the denominator and is counted, not hidden. Re-runnable and idempotent — a lead released from suppression is scored by the next run. A lead's `updated_at` moves only when its stored score, tier or breakdown actually changes, so a re-run that changes nothing leaves every timestamp alone and idempotence covers the timestamps too. The run's **effective weights are persisted on the campaign** (`campaigns.scoring_weights_json`) and `save_research` re-scores with those, so a campaign is only ever scored on one scale; without this, an override run followed by a single `save_research` would leave one lead measured differently from the other 75 and silently incomparable. Unknown keys in `weights` are `VALIDATION_FAILED`, as are non-numeric values and any weight outside **0–1**: the sum-to-1.0 rule catches none of the three, so `{"signals": 0.5, "signalz": 0.5}` would score every lead at half weight and `{"segmentFit": 2.0, "proximity": -1.0, …}` sums to 1.0 while scoring nonsense. The profile path is protected by its schema's `additionalProperties`, `type` and `minimum`/`maximum`; `weights` has no schema, so it needs all three checks itself.
+
+The persisted weights are a **record of the last run, not a sticky setting**: a later `score_leads` with no `weights` argument returns the campaign to the profile's scale. `score_leads` decides the scale and `save_research` follows it, so an override is always undoable by re-running without one. Rows are ordered with **`leadId` as a final tiebreak** on every sort, since `offset`/`limit` paging over a non-unique key (and scores tie constantly) can otherwise repeat or skip rows between pages; `name_asc` orders on the normalized name so the sequence does not depend on the provider's collation. `tiers` covers the scored leads only, since a tier count a user reads as “how many A leads do I have” must not include leads they cannot contact.
 
 ### `save_research`
 Input: `{ "campaignId": "...", "leadId": "L0001", "research": { /* schemas/research.schema.json */ } }`
-Output: `{ "saved": true, "score": 92, "tier": "A", "delta": +17 }`
+Output: `{ "saved": true, "score": 92, "tier": "A", "delta": 17 }` — `delta` is signed (negative when research lowers the score) and is `null` when the lead had no previous score.
+Re-scores the lead with the campaign's persisted scoring weights (see `score_leads`), not the profile's, so one list never mixes two scales. A **`suppressed`** lead may be researched — it keeps its score, it may be released later, and the research can inform that decision. A **`duplicate`** row may not: that is `VALIDATION_FAILED` naming the primary lead to use instead, refused **before anything is written**, and the save and re-score are atomic, so no path can leave research stored against a score that was never updated.
+
 Validation: every signal has `url` and `date`; `personalLine` ≤ 180 chars; `llmAdjustment` in −15…15; `status: "no_signal"` allowed with an empty `signals`.
 
 ## Enrichment

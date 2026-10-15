@@ -1,0 +1,20 @@
+{
+  "status": "researched",
+  "summary": "Structural and sheet-metal fabricator on Energy Parkway in west Houston; cuts, forms and welds steel for commercial and industrial general contractors.",
+  "segment": "High-bay manufacturing",
+  "facilityFit": { "level": "high", "evidence": "High-bay fabrication shop with an overhead bridge crane over the main bay, so work above head height is routine.", "url": "https://www.westparkmetalfab.example/capabilities" },
+  "employeeEstimate": { "value": 60, "source": "https://registry.example.gov/establishment/westpark-metal-fab", "note": "Federal establishment record lists 60 employees at the Houston plant." },
+  "signals": [
+    { "type": "registry", "text": "OSHA establishment record for the Houston plant, listing 60 employees.", "url": "https://registry.example.gov/establishment/westpark-metal-fab", "date": "2026-03" }
+  ],
+  "suggestedAngle": "Talk about access to the overhead crane rails and the light fixtures in the main bay; there is no expansion to congratulate them on.",
+  "personalLine": "High-bay fabrication means overhead work all day, and a scissor lift sized for your main bay saves the ladder shuffle.",
+  "contactRoles": ["Plant Manager", "Maintenance Supervisor"],
+  "llmAdjustment": 0,
+  "rationale": "High-bay fabrication with overhead crane work, so lift access is routine, but the only record found is a registry entry: no permit, job post or expansion, so no buying signal is in the window.",
+  "sources": [
+    "https://www.westparkmetalfab.example/capabilities",
+    "https://registry.example.gov/establishment/westpark-metal-fab"
+  ],
+  "cautions": ["Registry data only: never reference safety records or citations in outreach copy."]
+}

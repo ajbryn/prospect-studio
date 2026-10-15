@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ProspectStudio.Core.Domain;
+using ProspectStudio.Core.Leads;
 
 namespace ProspectStudio.Infrastructure.Storage;
 
@@ -133,6 +134,30 @@ public sealed class LeadConfiguration : IEntityTypeConfiguration<Lead>
         builder.Property(lead => lead.DealerId).HasColumnName("dealer_id").HasMaxLength(32);
         builder.Property(lead => lead.BranchId).HasColumnName("branch_id").HasMaxLength(32);
         builder.Property(lead => lead.Assignment).HasColumnName("assignment").HasMaxLength(10);
+
+        // C6 completes §5.2's column list. The three JSON columns stay opaque TEXT and are never
+        // filtered inside (CLAUDE.md), which is why score, tier and research_status are columns too.
+        builder.Property(lead => lead.FeaturesJson).HasColumnName("features_json");
+
+        // Nullable: find_candidates stores leads before score_leads has run, and a 0 would read as
+        // "scored, and hopeless" rather than "not scored yet".
+        builder.Property(lead => lead.Score).HasColumnName("score");
+        builder.Property(lead => lead.Tier).HasColumnName("tier").HasMaxLength(1);
+        builder.Property(lead => lead.ScoreBreakdownJson).HasColumnName("score_breakdown_json");
+
+        // 'none' rather than null, with a database default so the leads C4 and C5 already stored come
+        // out of the migration in a state list_leads' researchStatus filter can partition.
+        builder.Property(lead => lead.ResearchStatus)
+            .HasColumnName("research_status")
+            .HasMaxLength(10)
+            .HasDefaultValue(ResearchStatuses.None)
+            .IsRequired();
+
+        builder.Property(lead => lead.Notes).HasColumnName("notes").HasMaxLength(2000);
+        builder.Property(lead => lead.ContactName).HasColumnName("contact_name").HasMaxLength(120);
+        builder.Property(lead => lead.ContactTitle).HasColumnName("contact_title").HasMaxLength(120);
+        builder.Property(lead => lead.Cohort).HasColumnName("cohort").HasMaxLength(40);
+
         builder.Property(lead => lead.UpdatedAt).HasColumnName("updated_at");
 
         builder.HasIndex(lead => new { lead.CampaignId, lead.SiteId })
@@ -140,6 +165,11 @@ public sealed class LeadConfiguration : IEntityTypeConfiguration<Lead>
             .HasDatabaseName("ix_leads_campaign_site");
         builder.HasIndex(lead => new { lead.CampaignId, lead.Status })
             .HasDatabaseName("ix_leads_campaign_status");
+
+        // list_leads defaults to score_desc over every lead in the campaign (mcp-tools.md §list_leads),
+        // and a Houston run is thousands of rows.
+        builder.HasIndex(lead => new { lead.CampaignId, lead.Score })
+            .HasDatabaseName("ix_leads_campaign_score");
 
         builder.HasOne<Campaign>()
             .WithMany()

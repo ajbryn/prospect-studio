@@ -1,0 +1,19 @@
+{
+  "status": "researched",
+  "summary": "Commercial sign fabricator and installer in Pasadena; builds and services channel letters, pylon signs and lighted cabinets for retail and industrial customers around the ship channel.",
+  "segment": "Electrical, HVAC & sign contractors",
+  "facilityFit": { "level": "high", "evidence": "Crews service lighted cabinets and pylon signs at height every day; the shop lists a 28-ft assembly and paint bay.", "url": "https://www.gulfcoastsignandlighting.example/services" },
+  "employeeEstimate": { "value": 45, "source": "https://www.gulfcoastsignandlighting.example/about", "note": "About page: 'our 45-person crew'" },
+  "signals": [
+    { "type": "hiring", "text": "Job post: sign installer, aerial lift certification required, bucket truck experience preferred.", "url": "https://jobs.example.com/gulf-coast-sign/installer", "date": "2026-08" }
+  ],
+  "suggestedAngle": "The job post names aerial lifts, so lead with uptime on installs rather than with the machine: one lift that covers a pylon sign and a cabinet service call in the same day.",
+  "personalLine": "Your crews are up at height on sign installs every day, and a single boom lift keeps a pylon job and a cabinet service call on one machine.",
+  "contactRoles": ["Operations Manager", "Service Manager"],
+  "llmAdjustment": 0,
+  "rationale": "Daily work at height and a job post that names aerial lift certification explicitly; one recent hiring signal rather than an expansion, so the need is steady rather than urgent.",
+  "sources": [
+    "https://www.gulfcoastsignandlighting.example/about",
+    "https://jobs.example.com/gulf-coast-sign/installer"
+  ]
+}

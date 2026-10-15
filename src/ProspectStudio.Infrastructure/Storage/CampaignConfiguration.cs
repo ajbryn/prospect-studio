@@ -27,6 +27,11 @@ public sealed class CampaignConfiguration : IEntityTypeConfiguration<Campaign>
         builder.Property(campaign => campaign.ProfileJson).HasColumnName("profile_json");
         builder.Property(campaign => campaign.ProfileSavedAt).HasColumnName("profile_saved_at");
         builder.Property(campaign => campaign.GeoJson).HasColumnName("geo_json");
+
+        // The effective weights of the last score_leads run (technical-design §5.2), opaque TEXT like
+        // the other JSON columns: save_research reads it whole to re-score on the same scale and
+        // nothing ever filters inside it.
+        builder.Property(campaign => campaign.ScoringWeightsJson).HasColumnName("scoring_weights_json");
         builder.Property(campaign => campaign.CreatedAt).HasColumnName("created_at");
         builder.Property(campaign => campaign.UpdatedAt).HasColumnName("updated_at");
 

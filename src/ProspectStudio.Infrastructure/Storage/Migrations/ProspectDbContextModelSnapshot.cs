@@ -62,6 +62,10 @@ namespace ProspectStudio.Infrastructure.Storage.Migrations
                         .HasColumnType("TEXT")
                         .HasColumnName("profile_saved_at");
 
+                    b.Property<string>("ScoringWeightsJson")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("scoring_weights_json");
+
                     b.Property<string>("Slug")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -305,15 +309,55 @@ namespace ProspectStudio.Infrastructure.Storage.Migrations
                         .HasColumnType("TEXT")
                         .HasColumnName("branch_id");
 
+                    b.Property<string>("Cohort")
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("cohort");
+
+                    b.Property<string>("ContactName")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("contact_name");
+
+                    b.Property<string>("ContactTitle")
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("contact_title");
+
                     b.Property<string>("DealerId")
                         .HasMaxLength(32)
                         .HasColumnType("TEXT")
                         .HasColumnName("dealer_id");
 
+                    b.Property<string>("FeaturesJson")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("features_json");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("notes");
+
                     b.Property<string>("PreSuppressionStatus")
                         .HasMaxLength(20)
                         .HasColumnType("TEXT")
                         .HasColumnName("pre_suppression_status");
+
+                    b.Property<string>("ResearchStatus")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("none")
+                        .HasColumnName("research_status");
+
+                    b.Property<int?>("Score")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("score");
+
+                    b.Property<string>("ScoreBreakdownJson")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("score_breakdown_json");
 
                     b.Property<string>("SiteId")
                         .IsRequired()
@@ -337,6 +381,11 @@ namespace ProspectStudio.Infrastructure.Storage.Migrations
                         .HasColumnType("TEXT")
                         .HasColumnName("suppression_reason");
 
+                    b.Property<string>("Tier")
+                        .HasMaxLength(1)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("tier");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("TEXT")
                         .HasColumnName("updated_at");
@@ -344,6 +393,9 @@ namespace ProspectStudio.Infrastructure.Storage.Migrations
                     b.HasKey("CampaignId", "Id");
 
                     b.HasIndex("SiteId");
+
+                    b.HasIndex("CampaignId", "Score")
+                        .HasDatabaseName("ix_leads_campaign_score");
 
                     b.HasIndex("CampaignId", "SiteId")
                         .IsUnique()
@@ -353,6 +405,87 @@ namespace ProspectStudio.Infrastructure.Storage.Migrations
                         .HasDatabaseName("ix_leads_campaign_status");
 
                     b.ToTable("leads", (string)null);
+                });
+
+            modelBuilder.Entity("ProspectStudio.Core.Domain.Research", b =>
+                {
+                    b.Property<string>("CampaignId")
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("campaign_id");
+
+                    b.Property<string>("LeadId")
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("lead_id");
+
+                    b.Property<int>("LlmAdjustment")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("llm_adjustment");
+
+                    b.Property<string>("ResearchJson")
+                        .IsRequired()
+                        .HasColumnType("TEXT")
+                        .HasColumnName("research_json");
+
+                    b.Property<DateTime>("SavedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("saved_at");
+
+                    b.HasKey("CampaignId", "LeadId");
+
+                    b.ToTable("research", (string)null);
+                });
+
+            modelBuilder.Entity("ProspectStudio.Core.Domain.Signal", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CampaignId")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("campaign_id");
+
+                    b.Property<string>("Date")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("date");
+
+                    b.Property<string>("LeadId")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("lead_id");
+
+                    b.Property<string>("Text")
+                        .IsRequired()
+                        .HasMaxLength(240)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("text");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("type");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("url");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CampaignId", "LeadId")
+                        .HasDatabaseName("ix_signals_campaign_lead");
+
+                    b.ToTable("signals", (string)null);
                 });
 
             modelBuilder.Entity("ProspectStudio.Core.Domain.Site", b =>
@@ -629,6 +762,24 @@ namespace ProspectStudio.Infrastructure.Storage.Migrations
                     b.HasOne("ProspectStudio.Core.Domain.Site", null)
                         .WithMany()
                         .HasForeignKey("SiteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ProspectStudio.Core.Domain.Research", b =>
+                {
+                    b.HasOne("ProspectStudio.Core.Domain.Lead", null)
+                        .WithMany()
+                        .HasForeignKey("CampaignId", "LeadId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("ProspectStudio.Core.Domain.Signal", b =>
+                {
+                    b.HasOne("ProspectStudio.Core.Domain.Lead", null)
+                        .WithMany()
+                        .HasForeignKey("CampaignId", "LeadId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

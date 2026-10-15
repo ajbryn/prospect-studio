@@ -6,6 +6,7 @@ using ProspectStudio.Core.Candidates;
 using ProspectStudio.Core.Configuration;
 using ProspectStudio.Core.Dealers;
 using ProspectStudio.Core.Jobs;
+using ProspectStudio.Core.Leads;
 using ProspectStudio.Infrastructure.Lists;
 
 namespace ProspectStudio.Infrastructure.Storage;
@@ -38,6 +39,7 @@ public static class StorageServiceCollectionExtensions
         services.AddSingleton<ICandidateStore, EfCandidateStore>();
         services.AddSingleton<IDealerStore, EfDealerStore>();
         services.AddSingleton<ILeadRoutingStore, EfLeadRoutingStore>();
+        services.AddSingleton<ILeadStore, EfLeadStore>();
         services.AddSingleton<IListImporter, ListImporter>();
         return services;
     }
